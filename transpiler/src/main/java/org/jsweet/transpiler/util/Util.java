@@ -134,6 +134,14 @@ public class Util {
         this.context = context;
     }
 
+
+
+    public static boolean is_parallel(ClassTree clzTree) {
+//        407TODO: make this function sound;
+        var extendsClause = clzTree.getExtendsClause();
+        return extendsClause != null && extendsClause.toString().equals("Thread");
+    }
+
     /**
      * @return true if given type is not null and Set or subtype of Set (generic or
      *         not)

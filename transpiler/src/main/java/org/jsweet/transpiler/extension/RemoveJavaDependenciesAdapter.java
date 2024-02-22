@@ -1843,7 +1843,9 @@ public class RemoveJavaDependenciesAdapter extends Java2TypeScriptAdapter {
                 && !(util().isType(superClass.asType(), Throwable.class)
                         || util().isType(superClass.asType(), Exception.class)
                         || util().isType(superClass.asType(), RuntimeException.class)
-                        || util().isType(superClass.asType(), Error.class))
+                        || util().isType(superClass.asType(), Error.class)
+                        || util().isType(superClass.asType(), Thread.class)
+                    )
                 && !util().isSourceElement(superClass);
     }
 

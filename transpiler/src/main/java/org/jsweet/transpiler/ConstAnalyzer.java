@@ -44,7 +44,8 @@ import standalone.com.sun.source.util.Trees;
  * @see JSweetContext
  * @author Renaud Pawlak
  */
-public class ConstAnalyzer extends TreeScanner<Void, Trees> {
+
+ public class ConstAnalyzer extends TreeScanner<Void, Trees> {
 
     private Set<VariableElement> modifiedVariables = new HashSet<>();
 

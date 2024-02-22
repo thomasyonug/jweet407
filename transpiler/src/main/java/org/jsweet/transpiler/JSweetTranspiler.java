@@ -961,7 +961,9 @@ public class JSweetTranspiler implements JSweetOptions, AutoCloseable {
         new OverloadScanner(transpilationHandler, context).process(compilationUnits);
         context.constAnalyzer = new ConstAnalyzer();
         context.constAnalyzer.scan(compilationUnits, context.trees);
-
+        // 407TODO: cross variables analyzer for converting regular java variable to shared array buffer;
+        context.cvsAnalyzer = new CvsAnalyzer();
+        context.cvsAnalyzer.scan(compilationUnits, context.trees);
         if (isVerbose()) {
             context.dumpOverloads(System.out);
         }
@@ -987,6 +989,7 @@ public class JSweetTranspiler implements JSweetOptions, AutoCloseable {
                     continue;
                 }
                 logger.info("scanning " + cu.getSourceFile().getName() + "...");
+
                 AbstractTreePrinter printer = factory.createTranslator(adapter, transpilationHandler, context, cu,
                         generateSourceMaps);
                 printer.print(cu);

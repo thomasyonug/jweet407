@@ -1777,6 +1777,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                     // it is a java.lang class being referenced, so we expand
                     // its name
                     print(identifierType.toString());
+//                    print(iden)
                     return true;
                 }
             }

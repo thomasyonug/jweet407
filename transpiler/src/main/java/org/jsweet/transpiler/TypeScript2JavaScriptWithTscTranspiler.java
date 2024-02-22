@@ -122,7 +122,7 @@ public class TypeScript2JavaScriptWithTscTranspiler extends TypeScript2JavaScrip
                     fullPass[0] = false;
                 }, () -> {
                     if (!ignoreErrors && transpilationHandler.getProblemCount() == 0) {
-                        transpilationHandler.report(JSweetProblem.INTERNAL_TSC_ERROR, null, "Unknown tsc error");
+                        transpilationHandler.report(JSweetProblem.INTERNAL_TSC_ERROR, null, "Unknown tsc error2");
                     }
                 }, args.toArray(new String[0]));
     }

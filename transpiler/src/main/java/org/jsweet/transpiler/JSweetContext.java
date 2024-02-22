@@ -124,6 +124,7 @@ public class JSweetContext {
      * default methods that are injected in the target classes.
      */
     public ConstAnalyzer constAnalyzer = null;
+    public CvsAnalyzer cvsAnalyzer = null;
 
     private Map<String, TypeMirror> jdkSubclasses = new HashMap<>();
 

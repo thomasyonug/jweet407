@@ -41,7 +41,7 @@ public abstract class TypeScript2JavaScriptTranspiler {
 			logger.error("ts2js transpilation failed", e);
 
 			if (!ignoreErrors && transpilationHandler.getProblemCount() == 0) {
-				transpilationHandler.report(JSweetProblem.INTERNAL_TSC_ERROR, null, "Unknown tsc error");
+				transpilationHandler.report(JSweetProblem.INTERNAL_TSC_ERROR, null, "Unknown tsc error1");
 			}
 		}
 	}

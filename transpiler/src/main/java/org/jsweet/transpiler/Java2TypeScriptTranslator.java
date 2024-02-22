@@ -53,17 +53,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -1477,6 +1467,30 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
     @Override
     public Void visitClass(final ClassTree classTree, final Trees trees) {
+        if (context.util.is_parallel(classTree)) {
+            // 407TODO: check if this class a parallel class, and inject the captured cross
+            //          thread variable for sharedArrayBuffer.
+            List<Name> cvs = context.cvsAnalyzer.getCvs(classTree);
+            StringBuilder obj = new StringBuilder("{");
+            for (var cv : cvs) {
+                var cvname = cv.toString();
+                obj.append(String.format("'%s':%s,", cvname, cvname));
+            }
+            obj.append("}");
+            var captured = "private __captured_cvs : any = " + obj;
+
+            var code = String.format("class %s extends WebWorker{\n%s\npublic source = ```\n",
+                    classTree.getSimpleName().toString(),
+                    captured);
+            print(code);
+//            var cvs = context.cvsAnalyzer.getCvs(classTree);
+            for (ClassTree def : util().getSortedClassDeclarations(compilationUnit.getTypeDecls(), compilationUnit)) {
+                if (cvs.contains(def.getSimpleName())) {
+                    visitClass(def, trees);
+                }
+            }
+        }
+
         TypeElement classTypeElement = Util.getElement(classTree);
         if (getAdapter().substituteType(classTypeElement)) {
             getAdapter().afterType(classTypeElement);
@@ -1634,8 +1648,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     print("class ");
                 }
             }
-
-            print(name + (getScope().enumWrapperClassScope ? ENUM_WRAPPER_CLASS_SUFFIX : ""));
+            var prefix = "";
+            if (isCvsClz(classTree)) {
+                prefix = "__";
+            }
+            print(prefix + name + (getScope().enumWrapperClassScope ? ENUM_WRAPPER_CLASS_SUFFIX : ""));
 
             if (classTree.getTypeParameters() != null && classTree.getTypeParameters().size() > 0) {
                 print("<").printArgList(null, classTree.getTypeParameters()).print(">");
@@ -1766,6 +1783,19 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         getAdapter().beforeTypeBody(classTypeElement);
 
+        // 407TODO: check if this class a parallel class, and inject the captured cross
+        //          thread variable for sharedArrayBuffer.
+        if (Util.is_parallel(classTree)) {
+            List<Name> cvs = context.cvsAnalyzer.getCvs(classTree);
+            StringBuilder obj = new StringBuilder("{");
+            for (var cv : cvs) {
+                var cvname = cv.toString();
+                obj.append(String.format("'%s':%s,", cvname, cvname));
+            }
+            obj.append("}");
+            printIndent().print("private __captured_cvs : any = " + obj );
+        }
+
         if (getScope().innerClassNotStatic && !getScope().interfaceScope && !getScope().enumScope
                 && !getScope().enumWrapperClassScope) {
             printIndent().print("public " + PARENT_CLASS_FIELD_NAME + ": any;").println();
@@ -1798,6 +1828,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 getScope().hasInnerClass = true;
             }
             if (def instanceof VariableTree) {
+//                407TODO: handle cvs;
                 VariableTree var = (VariableTree) def;
                 VariableElement varElement = Util.getElement(var);
                 if (!varElement.getModifiers().contains(Modifier.STATIC) && var.getInitializer() != null) {
@@ -1919,7 +1950,16 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 printIndent();
             }
             int pos = getCurrentPosition();
+//            407TODO: wrap the cvs class with sharedArrayBuffer.
+//            if (isCvsClz(classTree)) {
+////                print("wrap(");
+//                print(def);
+////                print(")");
+//            } else {
+//                print(def);
+//            }
             print(def);
+
 
             if (getScope().enumScope && def.getKind() == Kind.VARIABLE && getScope().stringEnumScope) {
                 print(" =  " + getStringLiteralQuote());
@@ -2300,8 +2340,36 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         getAdapter().afterType(classTypeElement);
 
+        if (isCvsClz(classTree)) {
+            printCvsProxy(classTree);
+        }
+
+        if (context.util.is_parallel(classTree)) {
+//            407TODO: should consider the parameters of class
+            var entryName = "__entry";
+            var src = String.format("var %s = new %s(); %s.start();\n```}",
+                    entryName,
+                    classTree.getSimpleName().toString(),
+                    entryName);
+            print(src);
+        }
+
         return returnNothing();
     }
+
+    private void printCvsProxy(ClassTree tree) {
+        var clzName = tree.getSimpleName().toString();
+        var code = String.format("var %s = new Proxy(%s, {" +
+                        "get: function(target, propKey, receiver) {}"
+                        + "})\n",
+                clzName,
+                "__" + clzName
+        );
+        print(code);
+    }
+
+
+
 
     private void printAbstractMethodDeclaration(ExecutableElement method) {
         printIndent().print("public abstract ").print(method.getSimpleName().toString());
@@ -2803,6 +2871,10 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
         }
 
         return returnNothing();
+    }
+
+    private boolean isCvsClz(ClassTree trees) {
+        return context.cvsAnalyzer.isCvsClz(trees);
     }
 
     private void printCoreOverloadMethodBody(MethodTree methodDecl, ClassTree parent, Overload overload) {
