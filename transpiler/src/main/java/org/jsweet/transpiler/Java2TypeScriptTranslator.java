@@ -1470,11 +1470,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
         if (context.util.is_parallel(classTree)) {
             // 407TODO: check if this class a parallel class, and inject the captured cross
             //          thread variable for sharedArrayBuffer.
-            List<Name> cvs = context.cvsAnalyzer.getCvs(classTree);
+            Set<String> cvs = context.cvsAnalyzer.getCvs(classTree);
             StringBuilder obj = new StringBuilder("{");
             for (var cv : cvs) {
-                var cvname = cv.toString();
-                obj.append(String.format("'%s':%s,", cvname, cvname));
+                // var cvname = cv.toString();
+                obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
             var captured = "private __captured_cvs : any = " + obj;
@@ -1485,7 +1485,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             print(code);
 //            var cvs = context.cvsAnalyzer.getCvs(classTree);
             for (ClassTree def : util().getSortedClassDeclarations(compilationUnit.getTypeDecls(), compilationUnit)) {
-                if (cvs.contains(def.getSimpleName())) {
+                if (cvs.contains(def.getSimpleName().toString())) {
                     visitClass(def, trees);
                 }
             }
@@ -1786,11 +1786,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
         // 407TODO: check if this class a parallel class, and inject the captured cross
         //          thread variable for sharedArrayBuffer.
         if (Util.is_parallel(classTree)) {
-            List<Name> cvs = context.cvsAnalyzer.getCvs(classTree);
+            Set<String> cvs = context.cvsAnalyzer.getCvs(classTree);
             StringBuilder obj = new StringBuilder("{");
             for (var cv : cvs) {
-                var cvname = cv.toString();
-                obj.append(String.format("'%s':%s,", cvname, cvname));
+                // var cvname = cv.toString();
+                obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
             printIndent().print("private __captured_cvs : any = " + obj );
