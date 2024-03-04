@@ -13,13 +13,7 @@ class __Desk {
 }
 var Desk = new Proxy(__Desk, proxyHandler);
 console.log('Cooker start!');
-console.log('Desk.count:', Desk.count);
 Desk.food_flag = 999;
-setTimeout(() => {
-    Desk.count = 20;
-    console.log('Desk.count:', Desk.count);
-}, 1000)
-
 `;
 }
 export class Customer extends WebWorker {
@@ -43,5 +37,7 @@ setTimeout(() => {
 }
 const cooker = new Cook(); // Assuming Cook is a subclass of WebWorker
 const customer = new Customer(); // Assuming Cook is a subclass of WebWorker
+cooker.init();
+customer.init();
 cooker.start();
 customer.start();

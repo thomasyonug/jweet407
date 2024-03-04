@@ -2,8 +2,8 @@
   "name": "tsworkerkit",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
+    "install": "npm install",
     "build": "rollup -c"
   },
   "keywords": [],
@@ -12,6 +12,7 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
     "rollup": "^4.12.0",
+    "rollup-plugin-copy": "^3.5.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
