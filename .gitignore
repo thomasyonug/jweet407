@@ -8,3 +8,4 @@ core-lib/es6/jsweet-core/
 node_modules/
 package-lock.json
 
+/runtime/dist/
