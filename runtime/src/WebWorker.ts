@@ -5,6 +5,7 @@ abstract class WebWorker {
     protected abstract __captured_cvs: any;
     protected worker: Worker | null = null;
     private cvsSet: Set<string> = new Set();
+    private workerId: number | null = null;
     
     private static workerCounter: number = 0;
     private static nextId(): number {
@@ -20,13 +21,14 @@ abstract class WebWorker {
         this.worker = new Worker('./initWorker.js', {type: 'module'});
         
         // assign the id to every worker
-        this.worker.postMessage({'command': 'init', 'id': `${WebWorker.nextId()}`});
+        this.workerId = WebWorker.nextId();
+        this.worker.postMessage({'command': 'init', 'id': `${this.workerId}`});
 
         // register the channel of variable in capturedCVS
         for (let key in this.__captured_cvs) {
             this.cvsSet.add(key);
         }
-        ChannelRegistry.register(this.worker, this.cvsSet);
+        ChannelRegistry.register(this.worker, this.workerId, this.cvsSet);
     }
     
     // 注册完成后，启动worker

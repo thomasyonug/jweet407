@@ -14,6 +14,7 @@ let keyToPort: Map<string, Set<MessagePort>> = new Map();
 // cvs更新后的值会在这里
 let objectMap: Map<string, any> = new Map();
 let workerId: number;
+let workerName: string;
 
 // ============== End of 全局变量 ================
 
@@ -58,12 +59,18 @@ self.onmessage = (event) => {
         case 'init': 
             let id = data.id;
             workerId = id;
+            workerName = `worker:${workerId}`;
             Logger.info(`initialize a worker:${workerId}`);
             break;
         case 'start':
             const func = new Function(data.source);
+            Logger.info(`${workerName} start running`);
             func();
+            Logger.info(`${workerName} stoped`);
             break;
+        // connect a channel from another worker
+        // cvs 是与该worker共享的相同的变量的集合
+        // 此事件会发生多次，在worker存在的时候
         case 'connect':
             let workerPort = event.ports[0];
             let cvs: Set<string> = data.cvs;
@@ -74,18 +81,18 @@ self.onmessage = (event) => {
                     keyToPort.set(cv, new Set());
                 }
                 keyToPort.get(cv)!.add(workerPort);
-            })
+            });
 
             workerPort.onmessage = (ev) => {
                 let data = ev.data;
                 let command = data.command;
                 if (command === 'update') {
                     objectMap.set(data.key, data.value);
-                    console.log(`receive a update of ` + data.key + ':' + data.value);
+                    Logger.info(`${workerName} receive a update of ` + data.key + ':' + data.value);
                 }
             };
             break;
         default:
-            console.log('Received unknown command:', event.data.command);
+            Logger.warn('Received unknown command:' + event.data.command);
     }
 };
