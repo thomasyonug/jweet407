@@ -2,6 +2,7 @@
  * initWorker
  * 一个简单的worker，是每个worker启动的初始状态
  */
+import { Logger } from "./Logger";
 
 /**
  * 一系列全局变量，在worker的整个生命周期中都可以被调用
@@ -12,6 +13,7 @@
 let keyToPort: Map<string, Set<MessagePort>> = new Map();
 // cvs更新后的值会在这里
 let objectMap: Map<string, any> = new Map();
+let workerId: number;
 
 // ============== End of 全局变量 ================
 
@@ -53,6 +55,11 @@ self.onmessage = (event) => {
     let data = event.data
     let command = data.command;
     switch (command) {
+        case 'init': 
+            let id = data.id;
+            workerId = id;
+            Logger.info(`initialize a worker:${workerId}`);
+            break;
         case 'start':
             const func = new Function(data.source);
             func();

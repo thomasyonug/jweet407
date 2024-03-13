@@ -1,7 +1,7 @@
 /**
  * 主要用于构建worker之间的隧道
  */
-class ChannelCenter {
+class ChannelRegistry {
 
     // worker 对应的 cvs
     private static workerToCvs: Map<Worker, Set<string>> = new Map();
@@ -32,4 +32,4 @@ class ChannelCenter {
     }
 }
 
-export default ChannelCenter;
+export default ChannelRegistry;
