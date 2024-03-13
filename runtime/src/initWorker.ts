@@ -8,23 +8,20 @@ import { Logger } from "./Logger";
  * 一系列全局变量，在worker的整个生命周期中都可以被调用
  */
 // ============== Start of 全局变量 ==============
-
 // 用来查找key对应的port（也对应一个worker）
 let keyToPort: Map<string, Set<MessagePort>> = new Map();
 // cvs更新后的值会在这里
 let objectMap: Map<string, any> = new Map();
 let workerId: number;
 let workerName: string;
-
-// ============== End of 全局变量 ================
-
 /**
  * ProxyHandler
  * get：从变量表中查找，如果没有则返回本地值
  * set：从keyToPort中找到对应的port，然后发送给这些port
  */
-let proxyHandler: ProxyHandler<any> = {
-    get: function(target, propKey: string) {
+(self as any).proxyHandler = {
+    // Your proxyHandler implementation
+    get: function(target: any, propKey: string) {
         //如果在cvs中,并且已经set就返回objectMap的值
         let key= target.className+'.'+propKey;
         if (objectMap.has(key) ){
@@ -33,7 +30,7 @@ let proxyHandler: ProxyHandler<any> = {
         }
         return target[propKey];
     },
-    set: function(target, propKey: string, newValue) {
+    set: function(target: any, propKey: string, newValue: any) {
         target[propKey] = newValue; // may be redundant?
         let key= target.className + '.' + propKey;
         if (!keyToPort.has(key)) { // 如果设置一个新prop，或者根本就没有其他worker共享
@@ -44,7 +41,8 @@ let proxyHandler: ProxyHandler<any> = {
         }
         return true;
     }
-}
+};
+// ============== End of 全局变量 ================
 
 /**
  * start:   当接受到{ command: 'start', source }消息时，会执行source中的代码
@@ -64,9 +62,13 @@ self.onmessage = (event) => {
             break;
         case 'start':
             const func = new Function(data.source);
-            Logger.info(`${workerName} start running`);
-            func();
-            Logger.info(`${workerName} stoped`);
+            try {
+                Logger.info(`${workerName} task processed...`);
+                func();
+                Logger.info(`${workerName} task finished... but worker still running`);
+            } catch (error) {
+                Logger.error(`${workerName} error: ${error}`);
+            }
             break;
         // connect a channel from another worker
         // cvs 是与该worker共享的相同的变量的集合
