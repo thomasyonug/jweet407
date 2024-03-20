@@ -13,4 +13,4 @@ class Logger {
     }
 }
 
-export { Logger };
+module.exports = Logger;

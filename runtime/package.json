@@ -2,20 +2,14 @@
   "name": "tsworkerkit",
   "version": "1.0.0",
   "description": "",
+  "type": "commonjs",
   "scripts": {
-    "install": "npm install",
-    "build": "rollup -c"
+    "test": "./node_modules/.bin/browserify test/Cook.js -o test/bundle.js && cp src/initWorker.js test/initWorker.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.6",
-    "rollup": "^4.12.0",
-    "rollup-plugin-copy": "^3.5.0",
-    "typescript": "^5.3.3"
-  },
-  "dependencies": {
-    "tslib": "^2.6.2"
+    "browserify": "^17.0.0"
   }
 }
