@@ -12,29 +12,38 @@ let keyToPort = new Map();
 let container = {};
 let workerId;
 let workerName;
+
 /**
- * ProxyHandler
- * get：从变量表中查找，如果没有则返回本地值
- * set：从keyToPort中找到对应的port，然后发送给这些port
+ * return a proxyHandler associated with the target
+ * @param {any} target 
  */
-let proxyHandler = {
-  get: function (target, propKey) {
-    let key = target.className + '.' + propKey;
-    let v = getValue(container, key);
-    return v;
-  },
-  set: function (target, propKey, newValue) {
-    target[propKey] = newValue; // may be redundant?
-    let key = target.className + '.' + propKey;
-    if (!keyToPort.has(key)) { // 如果设置一个新prop，或者根本就没有其他worker共享
-      return true; // not implement yet
-    }
-    for (let port of keyToPort.get(key)) {
-      port.postMessage({ 'command': 'update', 'key': key, 'value': newValue });
-    }
-    return true;
-  }
-};
+let buildProxy = (target) => {
+	// get the name of the class
+	let className = target.prototype.constructor.name;
+	// trim the redundant "__" in the class name
+	className = className.replace(/^__+/, '');
+	// create a new object in the container
+	return new Proxy(target, {
+		get: function (_target, propKey) {
+			let key = className + '.' + propKey;
+			if (container[className] != undefined) {
+				return getValue(container, key);
+			}
+			return _target[propKey];
+		},
+		set: function (_, propKey, newValue) {
+			let key = className + '.' + propKey;
+			if (!keyToPort.has(key)) { // 如果设置一个新prop，或者根本就没有其他worker共享
+				return true;
+			}
+			update(key, newValue);
+			for (let port of keyToPort.get(key)) {
+				port.postMessage({ 'command': 'update', 'key': key, 'value': newValue });
+			}
+			return true;
+		}
+	});
+}
 // ============== End of 全局变量 ================
 /**
  * start:   当接受到{ command: 'start', source }消息时，会执行source中的代码
@@ -57,7 +66,6 @@ self.onmessage = (event) => {
       try {
         Logger.info(`${workerName} task processed...`);
         func();
-        Logger.info(`${workerName} task finished... but worker still running`);
       }
       catch (error) {
         Logger.error(`${workerName} error: ${error}`);
