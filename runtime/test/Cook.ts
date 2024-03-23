@@ -11,7 +11,7 @@ class __Desk {
     static count = 10;
     static className = 'Desk';
 }
-var Desk = new Proxy(__Desk, proxyHandler);
+var Desk = new Proxy(__Desk, self.proxyHandler);
 console.log('Cooker start!');
 Desk.food_flag = 999;
 `;
@@ -28,7 +28,7 @@ class __Desk {
     static className = 'Desk';
 }
 // self.__Desk = __Desk;
-var Desk = new Proxy(__Desk, proxyHandler);
+var Desk = new Proxy(__Desk, self.proxyHandler);
 console.log('Customer start!');
 setTimeout(() => {
     console.log('Desk.food_flag:', Desk.food_flag);
