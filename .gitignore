@@ -18,3 +18,4 @@ package-lock.json
 .vscode/settings.json
 runtime/.idea/TSWorkerKit.iml
 runtime/test/Cook.js
+runtime/test/bundle.js
