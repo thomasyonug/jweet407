@@ -50,7 +50,7 @@ setTimeout(() => {
 // }
 const cooker = new Cook(); 
 const customer = new Customer(); 
-// const customer2 = new Customer2(); 
+const customer2 = new Customer2(); 
 cooker.init();
 customer.init();
 // customer2.init();

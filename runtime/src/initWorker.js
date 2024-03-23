@@ -8,6 +8,7 @@
 // ============== Start of 全局变量 ==============
 // 用来查找key对应的port（也对应一个worker）
 let keyToPort = new Map();
+let portToLock = new Map();
 // cvs更新后的值会在这里
 let container = {};
 let workerId;
@@ -33,6 +34,9 @@ let buildProxy = (target) => {
 		},
 		set: function (_, propKey, newValue) {
 			let key = className + '.' + propKey;
+			if (newValue instanceof Object) {
+				newValue.__key = key;
+			}
 			if (!keyToPort.has(key)) { // 如果设置一个新prop，或者根本就没有其他worker共享
 				return true;
 			}
@@ -77,6 +81,8 @@ self.onmessage = (event) => {
     case 'connect':
       let workerPort = event.ports[0];
       let cvs = data.cvs;
+			let lock = data.lock;
+			portToLock.set(workerPort, lock);
       // 将每个cv名字（key）都加入到map中
       cvs.forEach(cv => {
         if (!keyToPort.has(cv)) {
@@ -90,7 +96,16 @@ self.onmessage = (event) => {
         if (command === 'update') {
           update(data.key, data.value);
           Logger.info(`${workerName} receive a update of ` + data.key + ':' + data.value);
-        }
+        } else if (command === 'syn_update') {
+					let key = data.key;
+					let value = data.value; // lock
+					getValue(container, key).__lock = value;
+
+					let lock = portToLock.get(workerPort);
+					Atomics.store(lock, 0, 1);
+					Atomics.notify(lock, 0);
+				}
+
       };
       break;
     default:
@@ -100,6 +115,32 @@ self.onmessage = (event) => {
 /**
  * 辅助函数
  */
+
+function synchronizePostMessage(port, message) {
+	let lock = portToLock.get(port);
+	port.postMessage(message);
+	Atomics.wait(lock, 0, 0);
+}
+
+function sync(obj) {
+	let key = obj.__key;	
+	if (obj.__lock) {
+		Atomics.wait(obj.__lock, 0, 0);
+		return;
+	}
+	let lock = new SharedArrayBuffer(1);
+	obj.__lock = lock;
+	for (let port of keyToPort.get(key)) {
+		synchronizePostMessage(port, { 'command': 'syn_update', 'key': key, 'value': lock });
+	}
+	
+}
+function unSync(obj) {
+	Atomics.store(obj.__lock, 0, 1);
+	Atomics.notify(obj.__lock, 0);
+	obj.__lock = null;
+}
+
 // 处理链式更新
 function update(path, value) {
   let keys = path.split('.');
@@ -150,3 +191,5 @@ class Logger {
     console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
   }
 }
+
+
