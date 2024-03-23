@@ -1267,7 +1267,7 @@ public class JSweetContext {
      * will transpile to:
      * 
      * <pre>
-     * f(c: C<any>)
+     * f(c: C(any))
      * </pre>
      * 
      * otherwise:
@@ -2098,4 +2098,6 @@ public class JSweetContext {
             return false;
         }
     }
+
+    public String runtimeSrc;
 }

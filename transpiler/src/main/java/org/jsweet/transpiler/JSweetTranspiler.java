@@ -178,6 +178,7 @@ public class JSweetTranspiler implements JSweetOptions, AutoCloseable {
      */
     public final static String TSCROOTFILE = TypeScript2JavaScriptWithTscTranspiler.TSCROOTFILE;
 
+    private String runtimeSrc;
     private JSweetFactory factory;
     private PrinterAdapter adapter;
     private long transpilationStartTimestamp;
@@ -957,6 +958,7 @@ public class JSweetTranspiler implements JSweetOptions, AutoCloseable {
 
     private void generateTsFiles(ErrorCountTranspilationHandler transpilationHandler, SourceFile[] files,
             List<CompilationUnitTree> compilationUnits) throws IOException {
+        context.runtimeSrc = this.runtimeSrc;
         // regular file-to-file generation
         new OverloadScanner(transpilationHandler, context).process(compilationUnits);
         context.constAnalyzer = new ConstAnalyzer();
@@ -1627,6 +1629,10 @@ public class JSweetTranspiler implements JSweetOptions, AutoCloseable {
      */
     public void setEncoding(String encoding) {
         this.encoding = encoding;
+    }
+
+    public void setRuntimeSrc(String src) {
+        this.runtimeSrc = src;
     }
 
     @Override

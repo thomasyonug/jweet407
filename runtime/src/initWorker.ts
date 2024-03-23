@@ -20,7 +20,7 @@ let objectMap: Map<string, any> = new Map();
  * get：从变量表中查找，如果没有则返回本地值
  * set：从keyToPort中找到对应的port，然后发送给这些port
  */
-let proxyHandler: ProxyHandler<any> = {
+let proxyHandler: ProxyHandler(any) = {
     get: function(target, propKey: string) {
         //如果在cvs中,并且已经set就返回objectMap的值
         let key= target.className+'.'+propKey;

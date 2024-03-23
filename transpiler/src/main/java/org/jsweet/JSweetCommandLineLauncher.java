@@ -21,10 +21,8 @@ package org.jsweet;
 import static org.jsweet.transpiler.TranspilationHandler.OUTPUT_LOGGER;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.FileReader;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -358,6 +356,18 @@ public class JSweetCommandLineLauncher {
         optionArg.setHelp(
                 "An input directory (or column-separated input directories) containing Java source files to help the tranpilation (typically for libraries). Files in these directories will not generate any corresponding TS files but will help resolving various generation issues (such as default methods, tricking overloading cases, ...).");
         jsap.registerParameter(optionArg);
+
+        // runtime file
+        optionArg = new FlaggedOption(JSweetOptions.runtimePath);
+        optionArg.setLongFlag("runtimePath");
+        optionArg.setStringParser(JSAP.STRING_PARSER);
+        optionArg.setRequired(true);
+//        optionArg.setListSeparator(File.pathSeparatorChar);
+        optionArg.setHelp("The runtime file path");
+        jsap.registerParameter(optionArg);
+
+
+
 
         // Included files
         optionArg = new FlaggedOption("includes");
@@ -877,7 +887,24 @@ public class JSweetCommandLineLauncher {
                     if (jsapArgs.userSpecified(JSweetOptions.javaCompilerExtraOptions)) {
                         transpiler.setJavaCompilerExtraOptions(jsapArgs.getStringArray(JSweetOptions.javaCompilerExtraOptions));
                     }    
-                    
+
+                    if (jsapArgs.userSpecified(JSweetOptions.runtimePath)) {
+//                        jsapArgs.getFile(JSweetOptions.tsout);
+//                        tsOutputDir = jsapArgs.getFile(JSweetOptions.tsout);
+                        var path = jsapArgs.getString(JSweetOptions.runtimePath);
+//                        var f = SourceFile.toSourceFiles(path);
+//                        var rt = f[0].getJsFile();
+                        Scanner in = new Scanner(new FileReader(path));
+                        StringBuilder sb = new StringBuilder();
+                        while(in.hasNextLine()) {
+                            sb.append(in.nextLine());
+                            sb.append("\n");
+                        }
+                        in.close();
+                        var src = sb.toString();
+                        transpiler.setRuntimeSrc(src);
+                    }
+
                     if (tsOutputDir != null) {
                         transpiler.setTsOutputDir(tsOutputDir);
                     }
