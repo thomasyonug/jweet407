@@ -503,6 +503,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
     private boolean isDefinitionScope = false;
 
+    private boolean isSynchronizedBlock = false;
+    private ExpressionTree unSyncLock = null;
+
     protected final boolean isTopLevelScope() {
         return getIndent() == 0;
     }
@@ -740,7 +743,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitCompilationUnit(final CompilationUnitTree compilationUnit, final Trees trees) {
-        injectRuntime();
+//        injectRuntime();
 
         PackageElement packageElement = Util.getElement(compilationUnit.getPackage());
         if (context.isPackageErased(packageElement)) {
@@ -1488,7 +1491,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
-            var captured = "private __captured_cvs : any = " + obj;
+            var captured = "public __captured_cvs : any = " + obj;
 
             var code = String.format("class %s extends WebWorker{\n%s\npublic source = `\n",
                     classTree.getSimpleName().toString(),
@@ -1809,7 +1812,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
-            printIndent().print("private __captured_cvs : any = " + obj );
+            printIndent().print("public __captured_cvs : any = " + obj );
         }
 
         if (getScope().innerClassNotStatic && !getScope().interfaceScope && !getScope().enumScope
@@ -2376,16 +2379,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
     private void printCvsProxy(ClassTree tree) {
         var clzName = tree.getSimpleName().toString();
         var code = String.format("""
-                        var %s = new Proxy(%s, {
-                            set(obj, prop, value) {
-                                if (value instanceof Object) {
-                                    ChannelCenter.create_monitor(obj, prop, value);   
-                                }
-                                obj[prop] = value;
-                                ChannelCenter.update(obj, prop, value);
-                                return true;
-                            }
-                        })
+                        var %s = buildProxy(%s);
                         """,
                 clzName,
                 "__" + clzName
@@ -2963,7 +2957,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 } else {
                     print("{").println().startIndent().printIndent();
                     // temporary cast to any because of Java generics bug
-                    print("return (any)");
+                    print("return <any>");
                     if (isAsyncMethod(method)) {
                         print("await ");
                     }
@@ -2984,7 +2978,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                             print("...");
                         } else if (j == method.getParameters().size() - 1
                                 && util().hasVarargs(overload.getCoreMethodElement())) {
-                            print("(any)");
+                            print("<any>");
                         }
                         print(avoidJSKeyword(overload.getCoreMethod().getParameters().get(j).getName().toString()))
                                 .print(", ");
@@ -3217,7 +3211,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             // this workaround will not work on all browsers (see
             // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work)
             if (types().isAssignable(typeElement.asType(), util().getType(Throwable.class))) {
-                printIndent().print("((any)Object).setPrototypeOf(this, " + getClassName(typeElement) + ".prototype);")
+                printIndent().print("(<any>Object).setPrototypeOf(this, " + getClassName(typeElement) + ".prototype);")
                         .println();
             }
             if (getScope().innerClassNotStatic && !getScope().enumWrapperClassScope) {
@@ -3331,7 +3325,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                         printIndent();
                     }
                     if (!isConstructor) {
-                        print("return (any)");
+                        print("return <any>");
                     }
                     if (!actualStatements.isEmpty() || !isConstructor) {
                         print("((").print(") => {").startIndent().println();
@@ -5049,7 +5043,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
             if (isInterface || context.hasAnnotationType(classTypeElement, JSweetConfig.ANNOTATION_OBJECT_TYPE)) {
                 if (isInterface) {
-                    print("(any)");
+                    print("<any>");
                 }
 
                 Set<String> interfaces = new HashSet<>();
@@ -5268,7 +5262,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 // Function class that hides the global Function
                 // class
                 context.addGlobalsMapping("Function", "__Function");
-                print("(any)new (__Function.prototype.bind.apply(");
+                print("<any>new (__Function.prototype.bind.apply(");
                 if (mappedType != null) {
                     print(Java2TypeScriptTranslator.mapConstructorType(mappedType));
                 } else {
@@ -5614,7 +5608,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 }
             }
             if (singlePrecisionFloats() && binaryType.getKind() == TypeKind.FLOAT) {
-                print("((any)Math).fround(");
+                print("(<any>Math).fround(");
                 closeParen = true;
             }
             boolean charWrapping = util().isArithmeticOrLogicalOperator(binary.getKind())
@@ -5629,7 +5623,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     printBinaryLeftOperand(binary);
                     print(".charCodeAt(0)");
                 } else {
-                    print("(c => c.charCodeAt==null?(any)c:c.charCodeAt(0))(").print(binary.getLeftOperand())
+                    print("(c => c.charCodeAt==null?<any>c:c.charCodeAt(0))(").print(binary.getLeftOperand())
                             .print(")");
                 }
             } else {
@@ -5680,7 +5674,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     printBinaryRightOperand(binary);
                     print(".charCodeAt(0)");
                 } else {
-                    print("(c => c.charCodeAt==null?(any)c:c.charCodeAt(0))(");
+                    print("(c => c.charCodeAt==null?<any>c:c.charCodeAt(0))(");
                     printBinaryRightOperand(binary);
                     print(")");
                 }
@@ -5751,6 +5745,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitReturn(ReturnTree returnStatement, Trees trees) {
+        if (isSynchronizedBlock) {
+            print("Comm.unsync(");
+            print(unSyncLock);
+            print(");");
+        }
         print("return");
         if (returnStatement.getExpression() != null) {
             Tree parentFunction = getFirstParent(MethodTree.class, LambdaExpressionTree.class);
@@ -5909,12 +5908,19 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitForLoop(ForLoopTree forLoopTree, Trees trees) {
+        var isSynchronizedFlag = isSynchronizedBlock;
+        if (isSynchronizedFlag) {
+            isSynchronizedBlock = false;
+        }
         print("for(").printArgList(null, forLoopTree.getInitializer()).print("; ").print(forLoopTree.getCondition())
                 .print("; ").printArgList(null, forLoopTree.getUpdate()).print(") ");
         print("{");
         visitBeforeForBody(forLoopTree);
         print(forLoopTree.getStatement()).print(";");
         print("}");
+        if (isSynchronizedFlag) {
+            isSynchronizedBlock = true;
+        }
 
         return returnNothing();
     }
@@ -5927,6 +5933,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitContinue(ContinueTree continueStatement, Trees trees) {
+        if (isSynchronizedBlock) {
+            print("Comm.unsync(");
+            print(unSyncLock);
+            print(");");
+        }
         print("continue");
         if (continueStatement.getLabel() != null) {
             print(" ").print(continueStatement.getLabel().toString());
@@ -5940,6 +5951,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitBreak(BreakTree breakStatement, Trees trees) {
+        if (isSynchronizedBlock) {
+            print("Comm.unsync(");
+            print(unSyncLock);
+            print(");");
+        }
         print("break");
         if (breakStatement.getLabel() != null) {
             print(" ").print(breakStatement.getLabel().toString());
@@ -6029,7 +6045,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     }
                 }
             } else {
-                print("(any) (function(dims) { " + VAR_DECL_KEYWORD
+                print("<any> (function(dims) { " + VAR_DECL_KEYWORD
                         + " allocate = function(dims) { if (dims.length === 0) { return "
                         + util().getTypeInitialValue(newArrayElementType) + "; } else { " + VAR_DECL_KEYWORD
                         + " array = []; for(" + VAR_DECL_KEYWORD
@@ -6240,7 +6256,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             // Java is more permissive than TypeScript when casting type
             // variables
             if (fromType.getKind() == TypeKind.TYPEVAR) {
-                print("(any)");
+                print("<any>");
             } else {
                 print("<");
                 substituteAndPrintType(cast.getType()).print(">");
@@ -6249,7 +6265,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 // (that's weak!!)
                 if (util().isInterface(fromTypeElement) || util().isInterface(toTypeElement)
                         || toType.getKind() == TypeKind.TYPEVAR) {
-                    print("(any)");
+                    print("<any>");
                 }
             }
         }
@@ -6291,11 +6307,18 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitWhileLoop(WhileLoopTree whileLoop, Trees trees) {
+        var isSynchronizedBlockFlag = isSynchronizedBlock;
+        if (isSynchronizedBlockFlag) {
+            isSynchronizedBlock = false;
+        }
         print("while(").print(whileLoop.getCondition()).print(") ");
         print("{");
         visitBeforeWhileBody(whileLoop);
         print(whileLoop.getStatement());
         print("}");
+        if (isSynchronizedBlockFlag) {
+            isSynchronizedBlock = true;
+        }
 
         return returnNothing();
     }
@@ -6574,14 +6597,17 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 //        }
 //        return returnNothing();
 //        var syncCode = String.format("ChannelCenter.sync(%s);\n", sync.getExpression());
-        print("ChannelCenter.sync(");
+        print("Comm.sync(");
         print(sync.getExpression());
-        print(");\n");
+        print(");");
+        unSyncLock = sync.getExpression();
+        isSynchronizedBlock = true;
         print(sync.getBlock());
-//        visit
-//        visitOther(sync.getExpression());
-//        print(syncCode);
-//        visitBlock(block, trees);
+        isSynchronizedBlock = false;
+
+        print("Comm.unsync(");
+        print(unSyncLock);
+        print(");");
         return returnNothing();
     }
 
@@ -6638,7 +6664,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 print(" === 'function'");
                 int parameterCount = context.getFunctionalTypeParameterCount(type);
                 if (parameterCount != -1) {
-                    print(" && ((any)");
+                    print(" && (<any>");
                     print(exprStr, expr);
                     if (checkFirstArrayElement)
                         print("[0]");
@@ -6728,7 +6754,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                             if (qualifiedName.startsWith(JSweetConfig.LIBS_PACKAGE + ".")) {
                                 print(" instanceof ").print(qualifiedName);
                             } else {
-                                print(" instanceof (any)").print(qualifiedName);
+                                print(" instanceof <any>").print(qualifiedName);
                             }
                             if (type instanceof ArrayType) {
                                 ArrayType t = (ArrayType) type;
@@ -6869,7 +6895,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             return true;
         } else if (singlePrecisionFloats() && assignedType.getKind() == TypeKind.FLOAT
                 && expressionType.getKind() == TypeKind.DOUBLE) {
-            print("((any)Math).fround(").print(expression).print(")");
+            print("(<any>Math).fround(").print(expression).print(")");
             return true;
         } else {
 
@@ -6923,7 +6949,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     // raw generic type
                     TypeElement newClassElement = Util.getTypeElement(newClass);
                     if (!newClassElement.getTypeParameters().isEmpty() && newClass.getTypeArguments().isEmpty()) {
-                        print("(any)(").print(expression).print(")");
+                        print("<any>(").print(expression).print(")");
                         return true;
                     }
                 }
@@ -6931,7 +6957,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     && context.isFunctionalType(assignedTypeElement)) {
                 // disallow typing to force objects to be passed as function
                 // (may require runtime checks later on)
-                print("(any)(");
+                print("<any>(");
                 printFunctionalTypeAsLambda((TypeElement) assignedTypeElement, () -> print(expression));
                 print(")");
                 return true;
@@ -6944,7 +6970,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     ExecutableElement methodElement = (ExecutableElement) m;
                     if (methodElement.getReturnType().getKind() == TypeKind.TYPEVAR
                             && types().asElement(methodElement.getReturnType()).getEnclosingElement() == m) {
-                        print("(any)(").print(expression).print(")");
+                        print("<any>(").print(expression).print(")");
                         return true;
                     }
                 }

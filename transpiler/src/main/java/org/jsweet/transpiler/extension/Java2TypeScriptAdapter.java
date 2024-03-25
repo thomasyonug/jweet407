@@ -1732,15 +1732,14 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
         }
 
         if (isMappedType(className)) {
-
-            print("(").print(getTypeMappingTarget(className));
-            if (newClass.getIdentifier() instanceof ParameterizedTypeTree) {
-                List<? extends Tree> typeArgs = ((ParameterizedTypeTree) newClass.getIdentifier()).getTypeArguments();
-                if (typeArgs.size() > 0) {
-                    getPrinter().print("<").printTypeArgList(typeArgs).print(">");
-                }
-            }
-            print(")");
+//            print("<").print(getTypeMappingTarget(className));
+//            if (newClass.getIdentifier() instanceof ParameterizedTypeTree) {
+//                List<? extends Tree> typeArgs = ((ParameterizedTypeTree) newClass.getIdentifier()).getTypeArguments();
+//                if (typeArgs.size() > 0) {
+//                    getPrinter().print("<").printTypeArgList(typeArgs).print(">");
+//                }
+//            }
+//            print(">");
         }
         // macros
         if (util().isStringType(Util.getType(newClass.getIdentifier()))) {
