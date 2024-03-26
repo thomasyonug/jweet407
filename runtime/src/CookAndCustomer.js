@@ -45,7 +45,7 @@ class Cook {
 							console.log("before sync in sync");
 							Comm.sync(Desk.lock);
 							console.log("after sync in sync");
-							console.log("after unsync in sync");
+							console.log("before unsync in sync");
 							Comm.unsync(Desk.lock);
 							console.log("after unsync in sync");
 							console.log(Desk.count);
