@@ -102,38 +102,30 @@ const waitingLockQueues = new Map();
 const lockHolders = new Map();
 const waitingQueues = new Map();
 function sync(data){
-	
 	let key = data.key;
-	// let lock = data.lock;
-	if (!waitingLockQueues.has(key)) {
-		waitingLockQueues.set(key, []);
-	}
-	if(!waitingLockQueues.get(key).includes(data)){
-		waitingLockQueues.get(key).push(data);
-	}
-	
+	//有线程持有锁
 	if (lockHolders.get(key)) {
+		//不是同一线程，加入阻塞队列
 		if(lockHolders.get(key).workerId !== data.workerId ) {
-			
-			
-			return;
+			if (!waitingLockQueues.has(key)) {
+				waitingLockQueues.set(key, []);
+			}
+			waitingLockQueues.get(key).push(data);
+
 		}else{
-			
+			//是同一线程
 			lockHolders.get(key).count += 1;
 			Atomics.store(data.lock, 0, 1);
-			Atomics.notify(data.lock, 0);
-			return;
+			Atomics.notify(data.lock, 0);		
 		}
+	}else{
+		//没线程持有锁
+		lockHolders.set(key, data);
+		Atomics.store(d.lock, 0, 1);
+		Atomics.notify(d.lock, 0);
 	}
 	
-	let set = waitingLockQueues.get(key)
-	const d = set?.shift();
-	if (!d) {
-		return;
-	}
-	lockHolders.set(key, d);
-	Atomics.store(d.lock, 0, 1);
-	Atomics.notify(d.lock, 0);
+
 }
 function wait(data) {
 	let key = data.key;
