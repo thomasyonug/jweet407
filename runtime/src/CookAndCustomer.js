@@ -1,5 +1,6 @@
 class CookAndCustomer {
 	static main(args) {
+		
 		const cook = new Cook();
 		const customer = new Customer();
 		cook.start();
@@ -19,6 +20,7 @@ class Desk {
 // const Desk = buildProxy(__Desk);
 
 class Cook extends WebWorker {
+	debugger
 	// __captured_cvs = { 'Desk.count': Desk.count, 'Desk.lock': Desk.lock, 'Desk.food_flag': Desk.food_flag, }
 	source = `
 class __Desk {
@@ -28,15 +30,24 @@ class __Desk {
 	static count= 10;
 
 }
+
 // Desk["__class"] = "Desk";
 var Desk = buildProxy(__Desk);
 Desk.lock = new Object();
 class Cook {
-
+	
 	run() {
 			while((true)) {{
+					console.log("cook before sync");
 					Comm.sync(Desk.lock);
-					{
+					console.log("cook after sync");
+					{		
+							console.log("before sync in sync");
+							Comm.sync(Desk.lock);
+							console.log("after sync in sync");
+							console.log("after unsync in sync");
+							Comm.unsync(Desk.lock);
+							console.log("after unsync in sync");
 							console.log(Desk.count);
 							if (Desk.count === 0){
 									Comm.unsync(Desk.lock);
@@ -56,7 +67,9 @@ class Cook {
 									console.info("cook before notify");
 									Comm.notify(Desk.lock);
 									console.info("cook after notify");
+									console.log("cook before unsync");
 									Comm.unsync(Desk.lock);
+									console.log("cook after unsync");
 							}
 					};
 			}};
@@ -68,6 +81,7 @@ var __entry = new Cook(); __entry.run();
 `}
 
 class Customer extends WebWorker {
+	debugger
 	source = `
 class __Desk {
 
@@ -104,7 +118,9 @@ class Customer {
 								console.log("customer before notify");
 								Comm.notify(Desk.lock);
 								console.log("customer after notify");
+								console.log("customer before unsync");
 								Comm.unsync(Desk.lock);
+								console.log("customer after unsync");
 						}
 			}};
 		console.log("customer end");
