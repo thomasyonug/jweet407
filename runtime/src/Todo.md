@@ -9,9 +9,12 @@
 ## 取消obj大小限制
 
 ## 编译器控制流加unsync
+DONE
 
 ## 编译器识别runnable
 
 ## class嵌套,vue的嵌套
 
 ## 优化消息数量：多次修改只在解锁时更新（发送set）
+
+## Lazy Release Consistency
