@@ -121,22 +121,24 @@ function sync(data){
 	}else{
 		//没线程持有锁
 		lockHolders.set(key, data);
-		Atomics.store(d.lock, 0, 1);
-		Atomics.notify(d.lock, 0);
+		Atomics.store(data.lock, 0, 1);
+		Atomics.notify(data.lock, 0);
 	}
 	
 
 }
 function wait(data) {
 	let key = data.key;
-	
+	//获取线程持有的锁的数量
 	data.count = lockHolders.get(key).count;
+	//加入到等待队列
 	if (!waitingQueues.has(key)) {
 		waitingQueues.set(key, []);
 	}
 	waitingQueues.get(key).push(data);
+	//释放锁
 	lockHolders.delete(key);
-
+	//分配锁
 	let set = waitingLockQueues.get(key)
 	const d = set?.shift();
 	if (!d) {
@@ -151,14 +153,12 @@ function exitSync(data) {
 	if (lockHolders.get(key)) {
 		lockHolders.get(key).count -= 1;
 		if (lockHolders.get(key).count === 0) {
-			
 			lockHolders.delete(key);
 			let set = waitingLockQueues.get(key)
 			const d = set?.shift();
 			if (!d) {
 				return;
 			}
-			
 			lockHolders.set(key, d);
 			Atomics.store(d.lock, 0, 1);
 			Atomics.notify(d.lock, 0);
@@ -167,6 +167,30 @@ function exitSync(data) {
 
 }
 function notify(data){
+	let key = data.key;
+	if (waitingQueues.has(key)) {
+		let set = waitingQueues.get(key);
+		const d = set.shift
+		// if(d){
+		// 	if (!waitingLockQueues.has(key)) {
+		// 		waitingLockQueues.set(key, []);
+		// 	}
+		// 	waitingLockQueues.get(key).push(d)
+		// }
+		if(set){
+			
+			for(let element of set){
+				waitingLockQueues.get(key).push(element);
+			}
+		}
+	}
+	
+
+	
+	
+
+}
+function notifyAll(data){
 	let key = data.key;
 	if (waitingQueues.has(key)) {
 		let set = waitingQueues.get(key);
