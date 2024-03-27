@@ -9,18 +9,26 @@
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
-let lock;
-function createLock() {
-	if(lock) return lock;
+
+const lockByKey = new Map();//根据不同key创建不同锁，同一个key之创建一次锁
+
+function createLock(key) {
+	if(lockByKey.get(key)){
+		lock = lockByKey.get(key);
+		Atomics.store(lock,0,0);
+		return lock;
+	}
 	lock = new Int32Array(new SharedArrayBuffer(4));
+	lockByKey.set(key,lock);
 	return lock;
 }
+
 class Comm {
 	// 锁
 	static sync(obj) {
 		const key = obj.__key;
 		
-		const lock = createLock();
+		const lock = createLock(key);
 		postMessage({ 'command': 'sync', 'key': key, 'lock': lock ,"workerId":workerId})
 		Atomics.wait(lock, 0, 0);
 	}
@@ -30,7 +38,7 @@ class Comm {
 	}
 	static wait(obj) {
 		const key = obj.__key;
-		const lock = createLock();
+		const lock = createLock(key);
 		postMessage({ 'command': 'wait', 'key': key, lock ,"workerId":workerId});
 		Atomics.wait(lock, 0, 0);
 	}
@@ -40,7 +48,7 @@ class Comm {
 	}
 	// data
 	static update(key, value) {
-		const lock = createLock();
+		const lock = createLock(key);
 		postMessage({ 'command': 'update', key, value, lock });
 		Atomics.wait(lock, 0, 0);
 	}

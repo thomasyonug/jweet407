@@ -111,7 +111,6 @@ function sync(data){
 				waitingLockQueues.set(key, []);
 			}
 			waitingLockQueues.get(key).push(data);
-
 		}else{
 			//是同一线程
 			lockHolders.get(key).count += 1;
@@ -124,8 +123,6 @@ function sync(data){
 		Atomics.store(data.lock, 0, 1);
 		Atomics.notify(data.lock, 0);
 	}
-	
-
 }
 function wait(data) {
 	let key = data.key;
@@ -151,11 +148,14 @@ function wait(data) {
 function exitSync(data) {
 	let key = data.key;
 	if (lockHolders.get(key)) {
+		//持有锁的数量减1
 		lockHolders.get(key).count -= 1;
+		//判断是否释放锁
 		if (lockHolders.get(key).count === 0) {
 			lockHolders.delete(key);
+			//分配锁
 			let set = waitingLockQueues.get(key)
-			const d = set?.shift();
+			const d = set.shift();
 			if (!d) {
 				return;
 			}
@@ -170,25 +170,14 @@ function notify(data){
 	let key = data.key;
 	if (waitingQueues.has(key)) {
 		let set = waitingQueues.get(key);
-		const d = set.shift
-		// if(d){
-		// 	if (!waitingLockQueues.has(key)) {
-		// 		waitingLockQueues.set(key, []);
-		// 	}
-		// 	waitingLockQueues.get(key).push(d)
-		// }
-		if(set){
-			
-			for(let element of set){
-				waitingLockQueues.get(key).push(element);
+		const d = set.shift();
+		if(d){
+			if (!waitingLockQueues.has(key)) {
+				waitingLockQueues.set(key, []);
 			}
+			waitingLockQueues.get(key).push(d)
 		}
 	}
-	
-
-	
-	
-
 }
 function notifyAll(data){
 	let key = data.key;
