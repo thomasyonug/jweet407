@@ -65,21 +65,33 @@ function onmessage (e) {
 			moveWaitingToWaitingLock(e.data);
 			lockDispatch(e.data);
 			break;
+		case 'notifyAll':
+			while (waitingQueues.size > 0) {
+				moveWaitingToWaitingLock(e.data);
+			}
+			lockDispatch(e.data);
+			break;
 		case 'query': {
 			// console.log('query');
-			const key = e.data.key;
+			//const key = e.data.key;
 			const arr = e.data.arr;
-			const obj = get(key);
+			//const obj = get(key);
 			// TODO: handle null value of obj
-			serialize(obj, arr);
+			console.log('主线程收到get后发送：');
+			console.log(objects);
+			serialize(objects, arr);
 			Atomics.notify(arr, 0);
 			break;
 		}
 		case 'update': {
-			let key = e.data.key;
-			let value = e.data.value;
+			let changedObj = e.data.obj;
+			changedObj.forEach((value, key) => {
+				set(key, value);
+			});
+			console.log('主线程收得到set后的objects:');
+			console.log(objects);
 			let lock = e.data.lock;
-			set(key, value);
+			//set(key, value);
 			Atomics.store(lock, 0, 1)
 			Atomics.notify(lock, 0);
 			break;
@@ -87,16 +99,12 @@ function onmessage (e) {
 	}
 }
 
-function serialize(obj, buf) {
-	const value = {
-		value: obj
+function serialize(obj, arr) {
+	const serializedObjects = JSON.stringify(Array.from(obj)); // 将 Map 转换为数组再序列化
+	const uint8Array = new Uint8Array(arr.buffer);
+	for (let i = 0; i < serializedObjects.length; i++) {
+		uint8Array[i] = serializedObjects.charCodeAt(i);
 	}
-	const jsonStr = JSON.stringify(value);
-	const arr = new TextEncoder().encode(jsonStr);
-	const size = arr.byteLength;
-
-	buf[0] = size;
-	buf.set(arr, 1);
 }
 
 const waitingLockQueues = new Map();

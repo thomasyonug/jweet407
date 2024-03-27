@@ -21,12 +21,15 @@ class Comm {
 		const lock = createLock();
 		postMessage({ 'command': 'sync', 'key': key, 'lock': lock })
 		Atomics.wait(lock, 0, 0);
+		Comm.query();
 	}
 	static unsync(obj) {
+		Comm.update(changedObjects);
 		const key = obj.__key;
 		postMessage({ 'command': 'unsync', 'key': key});
 	}
 	static wait(obj) {
+		Comm.update(changedObjects);
 		const key = obj.__key;
 		const lock = createLock();
 		postMessage({ 'command': 'wait', 'key': key, lock });
@@ -36,35 +39,55 @@ class Comm {
 		const key = obj.__key;
 		postMessage({ 'command': 'notify', 'key': key});
 	}
-	// data
-	static update(key, value) {
-		const lock = createLock();
-		postMessage({ 'command': 'update', key, value, lock });
-		Atomics.wait(lock, 0, 0);
+	static notifyAll(obj) {
+		const key = obj.__key;
+		postMessage({ 'command': 'notifyAll', 'key': key});
+
 	}
-	static query(key) {
+	// data
+	static update(changedObj) {
+		if(changedObj.size===0) return;
+		const lock = createLock();
+		console.log('子线程一次性set:' );
+		console.log(changedObj);
+		postMessage({ 'command': 'update', 'obj':changedObj, lock });
+		Atomics.wait(lock, 0, 0);
+		changedObj.clear();
+	}
+	static query() {
 		const buffer = new SharedArrayBuffer(256);
 		const arr = new Int32Array(buffer);
-		postMessage({ 'command': 'query', 'key': key, 'arr':arr });
+		postMessage({ 'command': 'query',  'arr':arr });
 		Atomics.wait(arr, 0, 0);
-		return deserialize(arr);
+		let _objects= deserialize(arr);
+		console.log('子线程一次性get:' );
+		console.log(_objects);
+		mainObject = new Map([...mainObject, ..._objects]);
 	}
 	static synchronizePostMessage() {
 
 	}
 }
 
-function deserialize(buf) {
-	const arr = new Uint8Array(buf);
-	const jsonStr = new TextDecoder().decode(arr.slice(1, arr[0] + 1));
-	const obj = JSON.parse(jsonStr);
-	return obj.value;
+function deserialize(arr) {
+	const uint8Array = new Uint8Array(arr.buffer);
+	let serializedObjects = '';
+	for (let i = 0; i < uint8Array.length && uint8Array[i] !== 0; i++) {
+		serializedObjects += String.fromCharCode(uint8Array[i]);
+	}
+	const _objectsArray = JSON.parse(serializedObjects); // 反序列化为数组
+	return  new Map(_objectsArray); // 从数组创建 Map
 }
 
 /**
  * return a proxyHandler associated with the target
  * @param {any} target 
  */
+//map存储所有改变了的key value
+let changedObjects = new Map();
+//map存储所有的主线程中的key value
+let mainObject = new Map();
+
 let buildProxy = (target) => {
 	// get the name of the class
 	let className = target.prototype.constructor.name;
@@ -74,15 +97,23 @@ let buildProxy = (target) => {
 	return new Proxy(target, {
 		get: function (_target, propKey) {
 			let key = className + '.' + propKey;
-			const value = Comm.query(key);
-			return value==null?_target[propKey]:value;
+			if(mainObject.has(key)) {
+				return mainObject.get(key);
+			}
+			return _target[propKey];
+			// const value = Comm.query(key);
+			// return value==null?_target[propKey]:value;
 		},
 		set: function (clz, propKey, newValue) {
 			let key = className + '.' + propKey;
 			if (newValue instanceof Object) {
 				newValue.__key = key;
 			}
-			Comm.update(key, newValue);
+			clz[propKey] = newValue;
+			mainObject[key] = newValue;
+			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
+			if(!(newValue instanceof Object)){changedObjects.set(key, newValue);}
+			//Comm.update(key, newValue);
 			return true;
 		}
 	});
