@@ -2,15 +2,11 @@
  * initWorker
  * 一个简单的worker，是每个worker启动的初始状态
  */
-/**
- * 一系列全局变量，在worker的整个生命周期中都可以被调用
- */
-// ============== Start of 全局变量 ==============
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
 
-const lockByKey = new Map();//根据不同key创建不同锁，同一个key之创建一次锁
+const lockByKey = new Map(); //根据不同key创建不同锁，同一个key只创建一次锁
 
 function createLock(key) {
 	if(lockByKey.get(key)){
@@ -31,12 +27,15 @@ class Comm {
 		const lock = createLock(key);
 		postMessage({ 'command': 'sync', 'key': key, 'lock': lock ,"workerId":workerId})
 		Atomics.wait(lock, 0, 0);
+		Comm.query();
 	}
 	static unsync(obj) {
+		Comm.update(changedObjects);
 		const key = obj.__key;
 		postMessage({ 'command': 'unsync', 'key': key,"workerId":workerId});
 	}
 	static wait(obj) {
+		Comm.update(changedObjects);
 		const key = obj.__key;
 		const lock = createLock(key);
 		postMessage({ 'command': 'wait', 'key': key, lock ,"workerId":workerId});
@@ -46,29 +45,42 @@ class Comm {
 		const key = obj.__key;
 		postMessage({ 'command': 'notify', 'key': key,"workerId":workerId});
 	}
-	// data
-	static update(key, value) {
-		const lock = createLock(key);
-		postMessage({ 'command': 'update', key, value, lock });
+	static update(changedObj) {
+		if(changedObj.size===0) return;
+		const lock = createLock();
+		Logger.info('子线程一次性set:' );
+		Logger.info(changedObj);
+		postMessage({ 'command': 'update', 'obj':changedObj, lock });
 		Atomics.wait(lock, 0, 0);
+		changedObj.clear();
 	}
-	static query(key) {
+	static query() {
 		const buffer = new SharedArrayBuffer(256);
 		const arr = new Int32Array(buffer);
-		postMessage({ 'command': 'query', 'key': key, 'arr':arr });
-		Atomics.wait(arr, 0, 0);
-		return deserialize(arr);
+		postMessage({ 'command': 'query',  'arr':arr });
+
+		Atomics.wait(arr, 0, 0);Logger.info('============');
+		let _objects= deserialize(arr);
+		Logger.info('子线程一次性get:' );
+		Logger.info(_objects);
+		mainObject = new Map([...mainObject, ..._objects]);
 	}
 	static synchronizePostMessage() {
 
 	}
 }
 
-function deserialize(buf) {
-	const arr = new Uint8Array(buf);
-	const jsonStr = new TextDecoder().decode(arr.slice(1, arr[0] + 1));
-	const obj = JSON.parse(jsonStr);
-	return obj.value;
+function deserialize(arr) {
+	const uint8Array = new Uint8Array(arr.buffer);
+	let serializedObjects = '';
+	for (let i = 0; i < uint8Array.length && uint8Array[i] !== 0; i++) {
+		serializedObjects += String.fromCharCode(uint8Array[i]);
+	}
+	Logger.info(serializedObjects);
+	Logger.info('子线程收到get后反序列化：');
+	const _objectsArray = JSON.parse(serializedObjects); // 反序列化为数组
+	Logger.info(_objectsArray);
+	return  new Map(_objectsArray); // 从数组创建 Map
 }
 
 /**
@@ -84,20 +96,24 @@ let buildProxy = (target) => {
 	return new Proxy(target, {
 		get: function (_target, propKey) {
 			let key = className + '.' + propKey;
-			const value = Comm.query(key);
-			return value==null?_target[propKey]:value;
+			if(mainObject.has(key)) {
+				return mainObject.get(key);
+			}
+			return _target[propKey];
 		},
 		set: function (clz, propKey, newValue) {
 			let key = className + '.' + propKey;
 			if (newValue instanceof Object) {
 				newValue.__key = key;
 			}
-			Comm.update(key, newValue);
+			clz[propKey] = newValue;
+			mainObject[key] = newValue;
+			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
+			if(!(newValue instanceof Object)){changedObjects.set(key, newValue);}
 			return true;
 		}
 	});
 }
-// ============== End of 全局变量 ================
 /**
  * start:   当接受到{ command: 'start', source }消息时，会执行source中的代码
  * connect: 会收到cvs和一个port，port对应一个worker。
@@ -128,6 +144,11 @@ self.onmessage = (event) => {
 			Logger.warn('Received unknown command:' + event.data.command);
 	}
 };
+
+//map存储所有改变了的key value
+let changedObjects = new Map();
+//map存储所有的主线程中的key value
+let mainObject = new Map();
 
 class Logger {
 	static debug(message) {

@@ -69,19 +69,21 @@ function onmessage(e) {
 			break;
 
 		case 'query': {
-
-			const key = e.data.key;
-			const arr = e.data.arr;
-			const obj = get(key);
-			serialize(obj, arr);
+			let arr = e.data.arr;
+			Logger.info('主线程收到get后发送：');
+			Logger.info(objects);
+			serialize(objects, arr);
 			Atomics.notify(arr, 0);
 			break;
 		}
 		case 'update': {
-			let key = e.data.key;
-			let value = e.data.value;
+			let changedObj = e.data.obj;
+			changedObj.forEach((value, key) => {
+				 set(key, value);
+			});
+			Logger.info('主线程收得到set后的objects:');
+			Logger.info(objects);
 			let lock = e.data.lock;
-			set(key, value);
 			Atomics.store(lock, 0, 1)
 			Atomics.notify(lock, 0);
 			break;
@@ -190,15 +192,25 @@ function notifyAll(data) {
 	}
 }
 
-
-function serialize(obj, buf) {
-	const value = {
-		value: obj
+function serialize(obj, arr) {
+	const serializedObjects = JSON.stringify(Array.from(obj)); // 将 Map 转换为数组再序列化
+	const uint8Array = new Uint8Array(arr.buffer);
+	for (let i = 0; i < serializedObjects.length; i++) {
+		uint8Array[i] = serializedObjects.charCodeAt(i);
 	}
-	const jsonStr = JSON.stringify(value);
-	const arr = new TextEncoder().encode(jsonStr);
-	const size = arr.byteLength;
+}
 
-	buf[0] = size;
-	buf.set(arr, 1);
+class Logger {
+	static debug(message) {
+		console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`);
+	}
+	static info(message) {
+		console.log(`[INFO] ${new Date().toISOString()}: ${message}`);
+	}
+	static warn(message) {
+		console.warn(`[WARN] ${new Date().toISOString()}: ${message}`);
+	}
+	static error(message) {
+		console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
+	}
 }
