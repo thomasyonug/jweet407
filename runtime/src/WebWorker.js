@@ -160,3 +160,18 @@ function stopRunning(data) {
 function buildProxy(obj) {
     return obj;
 }
+
+
+const java = {lang: {
+    Thread: class Thread {
+        start() {
+            this.run()
+        }
+        constructor(obj) {
+            if (obj) {
+                return obj;
+            }
+        }
+    }
+
+}}

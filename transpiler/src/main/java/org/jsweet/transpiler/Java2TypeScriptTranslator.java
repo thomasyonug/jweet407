@@ -1832,7 +1832,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
-            printIndent().print("public __captured_cvs : any = " + obj );
+            printIndent().print("public __captured_cvs : any = " + obj + ";\n");
         }
 
         if (getScope().innerClassNotStatic && !getScope().interfaceScope && !getScope().enumScope
@@ -2386,7 +2386,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
         if (context.util.is_parallel(classTree)) {
 //            407TODO: should consider the parameters of class
             var entryName = "__entry";
-            var src = String.format("var %s = new %s(); %s.start();\n}",
+            var src = String.format("var %s = new %s(); %s.run();\n}",
                     entryName,
                     classTree.getSimpleName().toString(),
                     entryName);
