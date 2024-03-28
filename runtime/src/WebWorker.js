@@ -1,3 +1,4 @@
+const BUF_SIZE = 1024;
 class WebWorker {
 	worker = null;
 	cvsSet = new Set();
@@ -62,8 +63,7 @@ function onmessage(e) {
 			break;
 		case 'query': {
 			let arr = e.data.arr;
-			serializeMap(objects, arr);
-			Atomics.notify(arr, 0);
+			responseWithData(arr);
 			break;
 		}
 		case 'update': {
@@ -84,6 +84,7 @@ const blockQueues = new Map();
 const lockHolders = new Map();
 // 锁的等待队列
 const waitingQueues = new Map();
+
 /**
  * 工具函数：
  */
@@ -111,6 +112,24 @@ function dispatchLock(key) {
 	}
 	lockHolders.set(key, d);
 	releaseLock(d.lock);
+}
+function responseWithData(arr) {
+	// arr 只有255 * 4 个字节，第一个字节存放flag，所以大于BUF_SIZE - 4个字节的Map需要分批序列化
+	const JSONStr = JSON.stringify(Array.from(objects));
+	const size = JSONStr.length;
+	let remainder = size;
+	const batch = Math.ceil(size / (BUF_SIZE - 4));
+	for (let i = 0; i < batch; i++) {
+		populateArray(arr, JSONStr, i * (BUF_SIZE - 4), BUF_SIZE - 4);
+		if (i === batch - 1) {
+			Atomics.store(arr, 0, -1);
+			Atomics.notify(arr, 0);
+		} else {
+			Atomics.store(arr, 0, size);
+			Atomics.notify(arr, 0);
+			while (Atomics.load(arr, 0) !== 0) { }
+		}
+	}
 }
 
 /**
@@ -192,13 +211,17 @@ function notifyAll(data) {
 
 /**
  * 序列化一个Map为Int32Array buffer
- * @param {Map} map 
- * @param {Int32Array} arr 
+ * @param {*} arr 
+ * @param {*} mapStr 
+ * @param {*} start  start of the string
+ * @param {*} len    
  */
-function serializeMap(map, arr) {
-	const serializedObjects = JSON.stringify(Array.from(map)); // 将 Map 转换为数组再序列化
+function populateArray(arr, mapStr, start, len) {
 	const uint8Array = new Uint8Array(arr.buffer);
-	for (let i = 0; i < serializedObjects.length; i++) {
-		uint8Array[i] = serializedObjects.charCodeAt(i);
+	for (let i = 0; i < len && i + start < mapStr.length; i++) {
+		uint8Array[i + 4] = mapStr.charCodeAt(start + i);
 	}
+	// set the last byte to 0
+	const send = Math.min(mapStr.length - start, len);
+	uint8Array[4 + send] = 0;
 }

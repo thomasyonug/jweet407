@@ -5,12 +5,27 @@
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
+const BUF_SIZE = 1024;
+
+class Logger {
+	static debug(message) {
+		console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`);
+	}
+	static info(message) {
+		console.log(`[INFO] ${new Date().toISOString()}: ${message}`);
+	}
+	static warn(message) {
+		console.warn(`[WARN] ${new Date().toISOString()}: ${message}`);
+	}
+	static error(message) {
+		console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
+	}
+}
 
 function createLock() {
 	const lock = new Int32Array(new SharedArrayBuffer(4));
 	return lock;
 }
-
 //map存储所有改变了的key value
 let changedObjects = new Map();
 //map存储所有的主线程中的key value
@@ -44,17 +59,29 @@ class Comm {
 		changedObj.clear();
 	}
 	static query() {
-		const buffer = new SharedArrayBuffer(256);
+		const buffer = new SharedArrayBuffer(BUF_SIZE * 2);
 		const arr = new Int32Array(buffer);
-		postMessage({ 'command': 'query', 'arr': arr });
-
-		Atomics.wait(arr, 0, 0);
-		Logger.info('============');
-		let _objects = deserialize2Map(arr);
-		Logger.info('子线程一次性get:');
-		Logger.info(_objects);
+		let _objects = this.synchronizePostMessageWithData(arr);
 		mainObject = new Map([...mainObject, ..._objects]);
 	}
+	static synchronizePostMessageWithData(arr) { // Int32Array
+		postMessage({ 'command': 'query', 'arr': arr });
+		Atomics.wait(arr, 0, 0);
+		let str = '';
+		str += deserialize2MapStr(arr);
+		// 如果还有后续的数据传送，要继续接收
+		let flag = Atomics.load(arr, 0);
+		while (flag !== -1) {
+			Atomics.store(arr, 0, 0);
+			// Atomics.wait(arr, 0, 0); // 不能wait，因为store和wait不是原子性，有可能store往还没wait，对方就notify了，导致wait永远等待
+			while (Atomics.load(arr, 0) === 0) { }
+			flag = Atomics.load(arr, 0);
+			str += deserialize2MapStr(arr);
+		}
+		let objects = deserialize2Map(str);
+		return objects;
+	}
+
 	// 发送一个消息，然后等待对面处理后再返回，不需要返回值
 	static synchronizePostMessage(message) {
 		const lock = createLock();
@@ -68,17 +95,17 @@ class Comm {
  * @param {Int32Array} buf 
  * @returns {Map}
  */
-function deserialize2Map(buf) {
+function deserialize2Map(str) {
+	const arr = JSON.parse(str); // 反序列化为数组
+	return new Map(arr); // 从数组创建 Map
+}
+function deserialize2MapStr(buf) {
 	const uint8Array = new Uint8Array(buf.buffer);
 	let serializedObjects = '';
-	for (let i = 0; i < uint8Array.length && uint8Array[i] !== 0; i++) {
+	for (let i = 4; i < uint8Array.length && uint8Array[i] !== 0; i++) {
 		serializedObjects += String.fromCharCode(uint8Array[i]);
 	}
-	Logger.info(serializedObjects);
-	Logger.info('子线程收到get后反序列化：');
-	const _objectsArray = JSON.parse(serializedObjects); // 反序列化为数组
-	Logger.info(_objectsArray);
-	return new Map(_objectsArray); // 从数组创建 Map
+	return serializedObjects;
 }
 
 /**
@@ -142,19 +169,3 @@ self.onmessage = (event) => {
 			Logger.warn('Received unknown command:' + event.data.command);
 	}
 };
-
-
-class Logger {
-	static debug(message) {
-		console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`);
-	}
-	static info(message) {
-		console.log(`[INFO] ${new Date().toISOString()}: ${message}`);
-	}
-	static warn(message) {
-		console.warn(`[WARN] ${new Date().toISOString()}: ${message}`);
-	}
-	static error(message) {
-		console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
-	}
-}
