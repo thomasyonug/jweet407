@@ -106,6 +106,7 @@ class Customer {
 }
 Customer["__class"] = "Customer";
 var __entry = new Customer(); __entry.run();
+console.log("customer end");
 `}
 
 CookAndCustomer.main(null);

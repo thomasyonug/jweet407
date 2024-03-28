@@ -6,72 +6,70 @@
 let workerId;
 let workerName;
 
-const lockByKey = new Map(); //根据不同key创建不同锁，同一个key只创建一次锁
-
-function createLock(key) {
-	if(lockByKey.get(key)){
-		lock = lockByKey.get(key);
-		Atomics.store(lock,0,0);
-		return lock;
-	}
-	lock = new Int32Array(new SharedArrayBuffer(4));
-	lockByKey.set(key,lock);
+function createLock() {
+	const lock = new Int32Array(new SharedArrayBuffer(4));
 	return lock;
 }
 
+//map存储所有改变了的key value
+let changedObjects = new Map();
+//map存储所有的主线程中的key value
+let mainObject = new Map();
+
 class Comm {
-	// 锁
 	static sync(obj) {
 		const key = obj.__key;
-		
-		const lock = createLock(key);
-		postMessage({ 'command': 'sync', 'key': key, 'lock': lock ,"workerId":workerId})
-		Atomics.wait(lock, 0, 0);
+		this.synchronizePostMessage({ 'command': 'sync', 'key': key, "workerId": workerId });
 		Comm.query();
 	}
 	static unsync(obj) {
 		Comm.update(changedObjects);
 		const key = obj.__key;
-		postMessage({ 'command': 'unsync', 'key': key,"workerId":workerId});
+		postMessage({ 'command': 'unsync', 'key': key, "workerId": workerId });
 	}
 	static wait(obj) {
 		Comm.update(changedObjects);
 		const key = obj.__key;
-		const lock = createLock(key);
-		postMessage({ 'command': 'wait', 'key': key, lock ,"workerId":workerId});
-		Atomics.wait(lock, 0, 0);
+		this.synchronizePostMessage({ 'command': 'wait', 'key': key, "workerId": workerId });
 	}
 	static notify(obj) {
 		const key = obj.__key;
-		postMessage({ 'command': 'notify', 'key': key,"workerId":workerId});
+		postMessage({ 'command': 'notify', 'key': key, "workerId": workerId });
 	}
 	static update(changedObj) {
-		if(changedObj.size===0) return;
-		const lock = createLock();
-		Logger.info('子线程一次性set:' );
+		if (changedObj.size === 0) return;
+		Logger.info('子线程一次性set:');
 		Logger.info(changedObj);
-		postMessage({ 'command': 'update', 'obj':changedObj, lock });
-		Atomics.wait(lock, 0, 0);
+		this.synchronizePostMessage({ 'command': 'update', 'obj': changedObj });
 		changedObj.clear();
 	}
 	static query() {
 		const buffer = new SharedArrayBuffer(256);
 		const arr = new Int32Array(buffer);
-		postMessage({ 'command': 'query',  'arr':arr });
+		postMessage({ 'command': 'query', 'arr': arr });
 
-		Atomics.wait(arr, 0, 0);Logger.info('============');
-		let _objects= deserialize(arr);
-		Logger.info('子线程一次性get:' );
+		Atomics.wait(arr, 0, 0);
+		Logger.info('============');
+		let _objects = deserialize2Map(arr);
+		Logger.info('子线程一次性get:');
 		Logger.info(_objects);
 		mainObject = new Map([...mainObject, ..._objects]);
 	}
-	static synchronizePostMessage() {
-
+	// 发送一个消息，然后等待对面处理后再返回，不需要返回值
+	static synchronizePostMessage(message) {
+		const lock = createLock();
+		postMessage({ ...message, lock });
+		Atomics.wait(lock, 0, 0);
 	}
 }
 
-function deserialize(arr) {
-	const uint8Array = new Uint8Array(arr.buffer);
+/**
+ * 从一个Int32Array反序列化为Map
+ * @param {Int32Array} buf 
+ * @returns {Map}
+ */
+function deserialize2Map(buf) {
+	const uint8Array = new Uint8Array(buf.buffer);
 	let serializedObjects = '';
 	for (let i = 0; i < uint8Array.length && uint8Array[i] !== 0; i++) {
 		serializedObjects += String.fromCharCode(uint8Array[i]);
@@ -80,7 +78,7 @@ function deserialize(arr) {
 	Logger.info('子线程收到get后反序列化：');
 	const _objectsArray = JSON.parse(serializedObjects); // 反序列化为数组
 	Logger.info(_objectsArray);
-	return  new Map(_objectsArray); // 从数组创建 Map
+	return new Map(_objectsArray); // 从数组创建 Map
 }
 
 /**
@@ -96,7 +94,7 @@ let buildProxy = (target) => {
 	return new Proxy(target, {
 		get: function (_target, propKey) {
 			let key = className + '.' + propKey;
-			if(mainObject.has(key)) {
+			if (mainObject.has(key)) {
 				return mainObject.get(key);
 			}
 			return _target[propKey];
@@ -109,7 +107,7 @@ let buildProxy = (target) => {
 			clz[propKey] = newValue;
 			mainObject[key] = newValue;
 			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
-			if(!(newValue instanceof Object)){changedObjects.set(key, newValue);}
+			if (!(newValue instanceof Object)) { changedObjects.set(key, newValue); }
 			return true;
 		}
 	});
@@ -145,10 +143,6 @@ self.onmessage = (event) => {
 	}
 };
 
-//map存储所有改变了的key value
-let changedObjects = new Map();
-//map存储所有的主线程中的key value
-let mainObject = new Map();
 
 class Logger {
 	static debug(message) {
