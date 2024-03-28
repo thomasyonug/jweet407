@@ -1932,8 +1932,11 @@ public class JSweetContext {
             return false;
         }
         String name = util.getQualifiedName(typeElement);
+        if (name.equals(Runnable.class.getName())) {
+            return false;
+        }
         return name.startsWith("java.util.function.") //
-                || name.equals(Runnable.class.getName()) //
+//                || name.equals(Runnable.class.getName()) //
                 || name.startsWith(JSweetConfig.FUNCTION_CLASSES_PACKAGE + ".") //
                 || (util.isInterface(typeElement)
                         && (hasAnnotationType(typeElement, FunctionalInterface.class.getName())

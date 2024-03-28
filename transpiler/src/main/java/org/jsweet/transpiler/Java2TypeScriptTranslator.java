@@ -1230,13 +1230,14 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
             String typeFullName = util().getQualifiedName(typeType);
             if (Runnable.class.getName().equals(typeFullName)) {
-                if (arrayComponent) {
-                    print("(");
-                }
-                print("() => void");
-                if (arrayComponent) {
-                    print(")");
-                }
+//                if (arrayComponent) {
+//                    print("(");
+//                }
+//                print("() => void");
+//                if (arrayComponent) {
+//                    print(")");
+//                }
+                print("java.lang.Thread");
                 return this;
             }
             if (typeTree instanceof ParameterizedTypeTree) {
@@ -1493,21 +1494,38 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             obj.append("}");
             var captured = "public __captured_cvs : any = " + obj;
 
-            var code = String.format("class %s extends WebWorker{\n%s\npublic source = `\n",
+
+            var code = String.format("class %s extends WebWorker{\n%s\n",
                     classTree.getSimpleName().toString(),
-                    captured);
+                    captured
+            );
             print(code);
-            injectThread();
-//            var cvs = context.cvsAnalyzer.getCvs(classTree);
+
+            enterScope();
+//            var main = getScope().getMainMethod();
+            classTree.getMembers().stream().forEach(member -> {
+                if (member instanceof MethodTree) {
+//                    ((MethodTree) member).getKind().
+                    if (((MethodTree) member).getModifiers().toString().contains("static")) {
+                        print(member);
+                    }
+                }
+            });
+
+
+
+            print("\npublic source = function () {\n");
+
+
+
             for (ClassTree def : util().getSortedClassDeclarations(compilationUnit.getTypeDecls(), compilationUnit)) {
                 var name = def.getSimpleName().toString();
                 if (cvs.stream().anyMatch(s -> s.startsWith(name))) {
-                    visitClass(def, trees);
-                }
-//                if (cvs.contains()) {
 //                    visitClass(def, trees);
-//                }
+                    print(def);
+                }
             }
+            exitScope();
         }
 
         TypeElement classTypeElement = Util.getElement(classTree);
@@ -1799,6 +1817,8 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             }
             print(" {").println().startIndent();
         }
+
+
 
         getAdapter().beforeTypeBody(classTypeElement);
 
@@ -2149,7 +2169,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         if (!globals) {
             endIndent().printIndent().print("}");
-
+            if (isCvsClz(classTree)) {
+                printCvsProxy(classTree);
+            }
             if (!getScope().interfaceScope && !getScope().declareClassScope && !getScope().enumScope
                     && !(getScope().enumWrapperClassScope
                             && classTypeElement.getNestingKind() == NestingKind.ANONYMOUS)) {
@@ -2359,18 +2381,26 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         getAdapter().afterType(classTypeElement);
 
-        if (isCvsClz(classTree)) {
-            printCvsProxy(classTree);
-        }
+
 
         if (context.util.is_parallel(classTree)) {
 //            407TODO: should consider the parameters of class
             var entryName = "__entry";
-            var src = String.format("var %s = new %s(); %s.start();\n`}",
+            var src = String.format("var %s = new %s(); %s.start();\n}",
                     entryName,
                     classTree.getSimpleName().toString(),
                     entryName);
             print(src);
+//            var main = getScope().getMainMethod();
+//            print(main);
+//            classTree.getMembers().stream().forEach(member -> {
+//                if (member instanceof MethodTree) {
+//                    if (((MethodTree) member).getName().toString().equals("main")) {
+//                        print(member);
+//                    }
+//                }
+//            });
+            print("}");
         }
 
         return returnNothing();

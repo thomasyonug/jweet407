@@ -24,7 +24,7 @@ class WebWorker {
 	// 注册完成后，启动worker
 	start() {
 		this.init();
-		this.worker.postMessage({ 'command': 'start', 'source': this.source });
+		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
 	}
 }
 
@@ -155,4 +155,8 @@ function lockDispatch(data) {
 function stopRunning(data) {
 	let key = data.key;
 	lockHolders.delete(key);
+}
+
+function buildProxy(obj) {
+    return obj;
 }

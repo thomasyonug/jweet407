@@ -133,3 +133,45 @@ class Logger {
 		console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
 	}
 }
+
+
+
+
+
+
+
+
+
+const java = {lang: {
+    Thread: class Thread {
+        start() {
+            this.run()
+        }
+        constructor(obj) {
+            if (obj) {
+                return obj;
+            }
+        }
+    }
+
+}}
+
+Object.prototype.wait = function () {
+    Comm.wait(this)
+}
+
+Object.prototype.notify = function () {
+    Comm.notify(this)
+}
+
+Object.prototype.notifyAll = function () {
+    Comm.notify(this)
+}
+
+
+
+
+
+
+
+

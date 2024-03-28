@@ -1851,6 +1851,9 @@ public class RemoveJavaDependenciesAdapter extends Java2TypeScriptAdapter {
 
     @Override
     public boolean eraseSuperInterface(TypeElement classdecl, TypeElement superInterface) {
+        if (superInterface.getQualifiedName().toString().equals(Runnable.class.getName())) {
+            return false;
+        }
         return superInterface.getQualifiedName().toString().startsWith("java.")
                 && !util().isSourceElement(superInterface);
     }

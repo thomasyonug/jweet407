@@ -358,13 +358,13 @@ public class JSweetCommandLineLauncher {
         jsap.registerParameter(optionArg);
 
         // runtime file
-        optionArg = new FlaggedOption(JSweetOptions.runtimePath);
-        optionArg.setLongFlag("runtimePath");
-        optionArg.setStringParser(JSAP.STRING_PARSER);
-        optionArg.setRequired(true);
-//        optionArg.setListSeparator(File.pathSeparatorChar);
-        optionArg.setHelp("The runtime file path");
-        jsap.registerParameter(optionArg);
+//        optionArg = new FlaggedOption(JSweetOptions.runtimePath);
+//        optionArg.setLongFlag("runtimePath");
+//        optionArg.setStringParser(JSAP.STRING_PARSER);
+//        optionArg.setRequired(true);
+////        optionArg.setListSeparator(File.pathSeparatorChar);
+//        optionArg.setHelp("The runtime file path");
+//        jsap.registerParameter(optionArg);
 
 
 

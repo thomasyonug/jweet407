@@ -12,9 +12,20 @@
 DONE
 
 ## 编译器识别runnable
+YWZ
+
+## 编译器识别对象方法和静态方法的synchronized
+CA
+
+
+## cvs不一定只是静态变量，可能是成员变量
+IGNORE
 
 ## class嵌套,vue的嵌套
+IGNORE
 
-## 优化消息数量：多次修改只在解锁时更新（发送set）
+## 优化消息数量：多次修改只在解锁时更新（发送set
+DONE
 
-## Lazy Release Consistency
+## Lazy Release Consistency 与 volatile
+YYH
