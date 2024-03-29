@@ -16,10 +16,6 @@ class WebWorker {
 		// assign the id to every worker
 		this.workerId = WebWorker.nextId();
 		this.worker.postMessage({ 'command': 'init', 'id': `${this.workerId}` });
-		// register the channel of variable in capturedCVS
-		// for (let key in this.__captured_cvs) {
-		// 	this.cvsSet.add(key);
-		// }
 	}
 	// 注册完成后，启动worker
 	start() {
@@ -29,133 +25,184 @@ class WebWorker {
 }
 
 const objects = new Map();
-function get(key) {
+function getObject(key) {
 	return objects.get(key);
 }
-function set(key, value) {
-	objects.set(key,value);
+function setObject(key, value) {
+	objects.set(key, value);
 }
 
 /**
  * sync: {
  * 		command: 'sync',
  * 		key: key,
- * 		lock: lock, (a sharedArrayBuffer) 
+ * 		lock: lock, {Int32Array}
  * }
  */
-function onmessage (e) {
+function onmessage(e) {
 	const data = e.data;
 	const command = data.command;
+	e.data.count = 1;
 	switch (command) {
 		// require a lock
 		case 'sync':
-			pushWaitingLock(e.data);
-			lockDispatch(e.data);
+			sync(e.data);
 			break;
 		case 'wait':
-			stopRunning(e.data);
-			pushWaiting(e.data);
-			lockDispatch(e.data);
+			wait(e.data);
 			break;
 		case 'unsync':
-			stopRunning(e.data);
-			lockDispatch(e.data);
+			exitSync(e.data);
 			break;
 		case 'notify':
-			moveWaitingToWaitingLock(e.data);
-			lockDispatch(e.data);
+			notify(e.data)
+			break;
+		case 'notifyAll':
+			moveAllWaitingToWaitingLock(e.data);
 			break;
 		case 'query': {
-			// console.log('query');
-			const key = e.data.key;
-			const arr = e.data.arr;
-			const obj = get(key);
-			// TODO: handle null value of obj
-			serialize(obj, arr);
+			let arr = e.data.arr;
+			serializeMap(objects, arr);
 			Atomics.notify(arr, 0);
 			break;
 		}
 		case 'update': {
-			let key = e.data.key;
-			let value = e.data.value;
+			let changedObj = e.data.obj;
+			changedObj.forEach((value, key) => {
+				setObject(key, value);
+			});
 			let lock = e.data.lock;
-			set(key, value);
 			Atomics.store(lock, 0, 1)
 			Atomics.notify(lock, 0);
 			break;
 		}
 	}
 }
-
-function serialize(obj, buf) {
-	const value = {
-		value: obj
-	}
-	const jsonStr = JSON.stringify(value);
-	const arr = new TextEncoder().encode(jsonStr);
-	const size = arr.byteLength;
-
-	buf[0] = size;
-	buf.set(arr, 1);
-}
-
-const waitingLockQueues = new Map();
+// 锁的阻塞队列
+const blockQueues = new Map();
+// 锁的持有者
 const lockHolders = new Map();
+// 锁的等待队列
 const waitingQueues = new Map();
-
-// 将一个进程放入等待队列
-function pushWaitingLock(data) {
-	let key = data.key;
-	// let lock = data.lock;
-	if (!waitingLockQueues.has(key)) {
-		waitingLockQueues.set(key, []);
+/**
+ * 工具函数：
+ */
+function joinBlockQueue(key, data) {
+	if (!blockQueues.has(key)) {
+		blockQueues.set(key, []);
 	}
-	waitingLockQueues.get(key).push(data);
+	blockQueues.get(key).push(data);
 }
-
-function pushWaiting(data) {
-	let key = data.key;
+function joinWaitingQueue(key, data) {
 	if (!waitingQueues.has(key)) {
 		waitingQueues.set(key, []);
 	}
 	waitingQueues.get(key).push(data);
 }
-
-function moveWaitingToWaitingLock(data) {
-	let key = data.key;
-	if (!waitingQueues.has(key)) {
-		return;
-	}
-	let set = waitingQueues.get(key);
-	const d = set.shift();
-	if (!d) {
-		return;
-	}
-	if (!waitingLockQueues.has(key)) {
-		waitingLockQueues.set(key, []);
-	}
-	waitingLockQueues.get(key).push(d);
+function releaseLock(lock) {
+	Atomics.store(lock, 0, 1);
+	Atomics.notify(lock, 0);
 }
-
-function lockDispatch(data) {
-	let key = data.key;
-	if (lockHolders.get(key)) {
-		return;
-	}
-	let set = waitingLockQueues.get(key)
+function dispatchLock(key) {
+	let set = blockQueues.get(key)
 	const d = set?.shift();
 	if (!d) {
 		return;
 	}
 	lockHolders.set(key, d);
-	Atomics.store(d.lock, 0, 1);
-	Atomics.notify(d.lock, 0);
+	releaseLock(d.lock);
 }
 
-function stopRunning(data) {
+/**
+ * sync要做的操作是：
+ * 1. 如果有线程持有锁，判断是否是同一线程
+ * 		1.1. 如果是同一线程，持有锁的数量加1
+ *  	1.2. 如果不是同一线程，加入阻塞队列，等待获取锁
+ */
+function sync(data) {
 	let key = data.key;
-	lockHolders.delete(key);
+	if (lockHolders.get(key)) {
+		if (lockHolders.get(key).workerId !== data.workerId) {
+			joinBlockQueue(key, data);
+		} else {
+			lockHolders.get(key).count += 1;
+			releaseLock(data.lock);
+		}
+	} else {
+		lockHolders.set(key, data);
+		releaseLock(data.lock);
+	}
 }
+/**
+ * exitSync要做的操作是：
+ * 判断锁的数量是否为0，如果是0，释放该锁，重新分配锁
+ */
+function exitSync(data) {
+	let key = data.key;
+	if (lockHolders.get(key)) {
+		//持有锁的数量减1
+		lockHolders.get(key).count -= 1;
+		//判断是否释放锁
+		if (lockHolders.get(key).count === 0) {
+			lockHolders.delete(key);
+			dispatchLock(key);
+		}
+	}
+}
+/**
+ * wait要做的操作是：
+ * 释放锁，加入等待队列
+ */
+function wait(data) {
+	let key = data.key;
+	data.count = lockHolders.get(key).count; // 记录锁计数器
+	joinWaitingQueue(key, data);
+	lockHolders.delete(key);
+	dispatchLock(key);
+}
+
+/**
+ * notify要做的操作是：
+ * 通知等待队列中的一个线程，加入锁的阻塞队列
+ */
+function notify(data) {
+	let key = data.key;
+	if (waitingQueues.has(key)) {
+		let set = waitingQueues.get(key);
+		const d = set.shift();
+		if (d) {
+			joinBlockQueue(key, d);
+		}
+	}
+}
+function notifyAll(data) {
+	let key = data.key;
+	if (waitingQueues.has(key)) {
+		let set = waitingQueues.get(key);
+		if (set) {
+			if (!blockQueues.has(key)) {
+				blockQueues.set(key, []);
+			}
+			for (let element of set) {
+				blockQueues.get(key).push(element);
+			}
+		}
+	}
+}
+
+/**
+ * 序列化一个Map为Int32Array buffer
+ * @param {Map} map 
+ * @param {Int32Array} arr 
+ */
+function serializeMap(map, arr) {
+	const serializedObjects = JSON.stringify(Array.from(map)); // 将 Map 转换为数组再序列化
+	const uint8Array = new Uint8Array(arr.buffer);
+	for (let i = 0; i < serializedObjects.length; i++) {
+		uint8Array[i] = serializedObjects.charCodeAt(i);
+	}
+}
+
 
 function buildProxy(obj) {
     return obj;
