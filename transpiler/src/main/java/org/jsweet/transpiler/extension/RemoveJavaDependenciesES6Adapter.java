@@ -207,7 +207,7 @@ public class RemoveJavaDependenciesES6Adapter extends RemoveJavaDependenciesAdap
         case "size":
             // size typing was so strong that it breaks unit tests checking size "type" (e.g
             // 0 !== 2)
-            print("(<any>");
+            print("((any)");
             printMacroName(targetMethodName);
             print(targetExpression).print(".size");
             print(")");
@@ -328,7 +328,7 @@ public class RemoveJavaDependenciesES6Adapter extends RemoveJavaDependenciesAdap
             printMacroName(targetMethodName);
             // size typing was so strong that it breaks unit tests checking size "type" (e.g
             // 0 !== 2)
-            print("(<any>");
+            print("((any)");
             print(targetExpression).print(".size");
             print(")");
             break;

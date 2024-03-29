@@ -139,7 +139,10 @@ public class Util {
     public static boolean is_parallel(ClassTree clzTree) {
 //        407TODO: make this function sound;
         var extendsClause = clzTree.getExtendsClause();
-        return extendsClause != null && extendsClause.toString().equals("Thread");
+        var impClause = clzTree.getImplementsClause();
+        return (extendsClause != null && extendsClause.toString().equals("Thread"))
+                || (impClause != null && impClause.stream()
+                        .anyMatch(tree -> tree.toString().equals("Runnable")));
     }
 
     /**

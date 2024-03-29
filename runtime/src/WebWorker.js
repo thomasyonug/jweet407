@@ -21,7 +21,7 @@ class WebWorker {
 	// 注册完成后，启动worker
 	start() {
 		this.init();
-		this.worker.postMessage({ 'command': 'start', 'source': this.source });
+		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
 	}
 }
 
@@ -225,3 +225,23 @@ function populateArray(arr, mapStr, start, len) {
 	const send = Math.min(mapStr.length - start, len);
 	uint8Array[4 + send] = 0;
 }
+
+
+function buildProxy(obj) {
+    return obj;
+}
+
+
+const java = {lang: {
+    Thread: class Thread {
+        start() {
+            this.run()
+        }
+        constructor(obj) {
+            if (obj) {
+                return obj;
+            }
+        }
+    }
+
+}}

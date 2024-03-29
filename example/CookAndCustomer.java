@@ -19,7 +19,7 @@ class Desk {
     public static int food_flag; //food_flag 标识桌上是否有食物，1为有，0为无
     public static int count = 10; //顾客还需吃的饭数
     public static Object lock = new Object(); //锁
-    pub static aa = 10;
+
 }
 
 
