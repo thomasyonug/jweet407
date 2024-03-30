@@ -1,0 +1,7 @@
+org.jsweet
+org.jsweet.transpiler
+org.jsweet.transpiler.candy
+org.jsweet.transpiler.eval
+org.jsweet.transpiler.extension
+org.jsweet.transpiler.model
+org.jsweet.transpiler.util

@@ -8,7 +8,26 @@ const blob = new Blob([code], {type: 'application/javascript'})
 const worker = new Worker(URL.createObjectURL(blob))
 ```
 WebWorker类型如下
-```js
+```js++
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++
 class Webworker {
     public start();
 }

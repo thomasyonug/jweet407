@@ -108,7 +108,7 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
     public boolean isCvsClz(ClassTree tree) {
         for (var names : cvsScope.values()) {
             for (var name : names) {
-                if (name.equals(tree.getSimpleName())) {
+                if (name.startsWith(tree.getSimpleName().toString())) {
                     return true;
                 }
             }

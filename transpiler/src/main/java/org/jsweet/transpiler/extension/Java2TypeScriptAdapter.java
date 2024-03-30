@@ -486,7 +486,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
             case "valueOf":
                 printMacroName("Enum." + targetMethodName);
                 if (invocationElement.getArgumentCount() == 1) {
-                    print("<any>").print(invocationElement.getTargetExpression()).print("[")
+                    print("(any)").print(invocationElement.getTargetExpression()).print("[")
                             .print(invocationElement.getArgument(0)).print("]");
                     return true;
                 }
@@ -496,7 +496,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                 return true;
             case "equals":
                 printMacroName("Enum." + targetMethodName);
-                print("(<any>(").print(invocationElement.getTargetExpression()).print(") === <any>(")
+                print("((any)(").print(invocationElement.getTargetExpression()).print(") === (any)(")
                         .print(invocationElement.getArgument(0)).print("))");
                 return true;
             case "compareTo":
@@ -580,7 +580,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                     return true;
 
                 case "any":
-                    print("(<any>");
+                    print("((any)");
                     printCastMethodInvocation(invocationElement);
                     print(")");
                     return true;
@@ -602,7 +602,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                 case "union":
                     getPrinter().typeChecker.checkUnionTypeAssignment(getPrinter().getParent(),
                             getCompilationUnitTree(), methodInvocationTree);
-                    print("(<any>");
+                    print("((any)");
                     printCastMethodInvocation(invocationElement);
                     print(")");
                     return true;
@@ -710,11 +710,11 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                     return true;
 
                 case "$apply":
-                    print("(<any>").print(invocationElement.getArgument(0)).print(")(")
+                    print("((any)").print(invocationElement.getArgument(0)).print(")(")
                             .printArgList(invocationElement.getArgumentTail()).print(")");
                     return true;
                 case "$new":
-                    print("new (<any>").print(invocationElement.getArgument(0)).print(")(")
+                    print("new ((any)").print(invocationElement.getArgument(0)).print(")(")
                             .printArgList(invocationElement.getArgumentTail()).print(")");
                     return true;
                 }
@@ -829,11 +829,11 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                             .print("] = ").print(invocationElement.getArgument(1));
                 } else {
                     if (invocationElement.getArgumentCount() == 2) {
-                        print("this[").print(invocationElement.getArgument(0)).print("] = <any>")
+                        print("this[").print(invocationElement.getArgument(0)).print("] = (any)")
                                 .print(invocationElement.getArgument(1));
                     } else {
                         print(invocationElement.getArgument(0)).print("[").print(invocationElement.getArgument(1))
-                                .print("] = <any>").print(invocationElement.getArgument(2));
+                                .print("] = (any)").print(invocationElement.getArgument(2));
                     }
                 }
                 return true;
@@ -1048,7 +1048,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                     return true;
                 case "getChars":
                     printMacroName(targetMethodName);
-                    print("((a, s, e, d, l) => { d.splice.apply(d, [l, e-s].concat(<any>a.substring(s, e).split(''))); })(")
+                    print("((a, s, e, d, l) => { d.splice.apply(d, [l, e-s].concat((any)a.substring(s, e).split(''))); })(")
                             .print(invocationElement.getTargetExpression()).print(", ")
                             .printArgList(invocationElement.getArguments()).print(")");
                     return true;
@@ -1280,7 +1280,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                     return true;
                 case "getSimpleName":
                     printMacroName(targetMethodName);
-                    print("(c => typeof c === 'string' ? (<any>c).substring((<any>c).lastIndexOf('.')+1) : c[\""
+                    print("(c => typeof c === 'string' ? ((any)c).substring(((any)c).lastIndexOf('.')+1) : c[\""
                             + Java2TypeScriptTranslator.CLASS_NAME_IN_CONSTRUCTOR + "\"] ? c[\""
                             + Java2TypeScriptTranslator.CLASS_NAME_IN_CONSTRUCTOR + "\"].substring(c[\""
                             + Java2TypeScriptTranslator.CLASS_NAME_IN_CONSTRUCTOR
@@ -1333,7 +1333,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                         if (invocationElement.getArgumentCount() == 1
                                 && invocationElement.getTargetExpression() != null) {
                             printMacroName(targetMethodName);
-                            print("(<any>((o1: any, o2: any) => { if (o1 && o1.compareTo) { return o1.compareTo(o2); } else { return o1 < o2 ? -1 : o2 < o1 ? 1 : 0; } })(");
+                            print("((any)((o1: any, o2: any) => { if (o1 && o1.compareTo) { return o1.compareTo(o2); } else { return o1 < o2 ? -1 : o2 < o1 ? 1 : 0; } })(");
                             printTarget(invocationElement.getTargetExpression()).print(",")
                                     .print(invocationElement.getArgument(0));
                             print("))");
@@ -1347,14 +1347,14 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
 
         switch (targetMethodName) {
         case "getClass":
-            print("(<any>");
+            print("((any)");
             printTarget(invocationElement.getTargetExpression());
             print(".constructor)");
             return true;
         case "hashCode":
             if (invocationElement.getArgumentCount() == 0) {
                 printMacroName(targetMethodName);
-                print("(<any>((o: any) => { if (o.hashCode) { return o.hashCode(); } else { "
+                print("((any)((o: any) => { if (o.hashCode) { return o.hashCode(); } else { "
                         + "return o.toString().split('').reduce((prevHash, currVal) => (((prevHash << 5) - prevHash) + currVal.charCodeAt(0))|0, 0); }})(");
                 printTarget(invocationElement.getTargetExpression());
                 print("))");
@@ -1375,7 +1375,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                             || util().isInterface(types().asElement(invocationElement.getTargetType()))
                             || invocationElement.getTargetExpression().getType().getKind() == TypeKind.TYPEVAR) {
                         printMacroName(targetMethodName);
-                        print("(<any>((o1: any, o2: any) => { if (o1 && o1.equals) { return o1.equals(o2); } else { return o1 === o2; } })(");
+                        print("((any)((o1: any, o2: any) => { if (o1 && o1.equals) { return o1.equals(o2); } else { return o1 === o2; } })(");
                         printTarget(invocationElement.getTargetExpression()).print(",")
                                 .print(invocationElement.getArgument(0));
                         print("))");
@@ -1399,7 +1399,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
                         print("((o: any) => { let clone = Object.create(o); for(let p in o) { if (o.hasOwnProperty(p)) clone[p] = o[p]; } return clone; })(this)");
                     }
                 } else {
-                    print("((o: any) => { if (o.clone != undefined) { return (<any>o).clone(); } else { let clone = Object.create(o); for(let p in o) { if (o.hasOwnProperty(p)) clone[p] = o[p]; } return clone; } })(");
+                    print("((o: any) => { if (o.clone != undefined) { return ((any)o).clone(); } else { let clone = Object.create(o); for(let p in o) { if (o.hasOwnProperty(p)) clone[p] = o[p]; } return clone; } })(");
                     printTarget(invocationElement.getTargetExpression());
                     print(")");
                 }
@@ -1435,7 +1435,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
             addItemJS = "if ([" + specialMembersList + "].indexOf(val) === -1) result.push(val as " + enumFullName
                     + ");";
         } else {
-            addItemJS = "if (!isNaN(<any>val)) { result.push(parseInt(val,10)); }";
+            addItemJS = "if (!isNaN((any)val)) { result.push(parseInt(val,10)); }";
         }
         printMacroName("Enum.values");
         print("function() { " + VAR_DECL_KEYWORD + " result: " + enumFullName + "[] = []; for(" + VAR_DECL_KEYWORD
@@ -1443,7 +1443,7 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
     }
 
     protected void printDefaultEquals(ExtendedElement left, ExtendedElement right) {
-        print("(<any>((o1: any, o2: any) => o1 && o1.equals ? o1.equals(o2) : o1 === o2)(");
+        print("((any)((o1: any, o2: any) => o1 && o1.equals ? o1.equals(o2) : o1 === o2)(");
         printTarget(left).print(",").print(right);
         print("))");
     }
@@ -1452,10 +1452,10 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
             List<ExtendedElement> arguments) {
         if (target instanceof IdentifierElement) {
             print("(typeof ").print(target).print(" === 'function' ? target").print("(").printArgList(arguments)
-                    .print(") : (<any>target).").print(functionName).print("(").printArgList(arguments).print("))");
+                    .print(") : ((any)target).").print(functionName).print("(").printArgList(arguments).print("))");
         } else {
             print("(target => (typeof target === 'function') ? target").print("(").printArgList(arguments)
-                    .print(") : (<any>target).").print(functionName).print("(").printArgList(arguments).print("))(")
+                    .print(") : ((any)target).").print(functionName).print("(").printArgList(arguments).print("))(")
                     .print(target).print(")");
         }
     }
@@ -1732,15 +1732,14 @@ public class Java2TypeScriptAdapter extends PrinterAdapter {
         }
 
         if (isMappedType(className)) {
-
-            print("<").print(getTypeMappingTarget(className));
-            if (newClass.getIdentifier() instanceof ParameterizedTypeTree) {
-                List<? extends Tree> typeArgs = ((ParameterizedTypeTree) newClass.getIdentifier()).getTypeArguments();
-                if (typeArgs.size() > 0) {
-                    getPrinter().print("<").printTypeArgList(typeArgs).print(">");
-                }
-            }
-            print(">");
+//            print("<").print(getTypeMappingTarget(className));
+//            if (newClass.getIdentifier() instanceof ParameterizedTypeTree) {
+//                List<? extends Tree> typeArgs = ((ParameterizedTypeTree) newClass.getIdentifier()).getTypeArguments();
+//                if (typeArgs.size() > 0) {
+//                    getPrinter().print("<").printTypeArgList(typeArgs).print(">");
+//                }
+//            }
+//            print(">");
         }
         // macros
         if (util().isStringType(Util.getType(newClass.getIdentifier()))) {

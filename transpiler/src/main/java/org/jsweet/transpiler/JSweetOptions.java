@@ -31,6 +31,8 @@ import org.jsweet.transpiler.extension.PrinterAdapter;
  */
 public interface JSweetOptions {
 
+    String runtimePath = "runtimePath";
+
     /**
      * Constant string for the 'bundle' option.
      */

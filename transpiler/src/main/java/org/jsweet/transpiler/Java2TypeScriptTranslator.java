@@ -503,6 +503,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
     private boolean isDefinitionScope = false;
 
+    private boolean isSynchronizedBlock = false;
+    private ExpressionTree unSyncLock = null;
+
     protected final boolean isTopLevelScope() {
         return getIndent() == 0;
     }
@@ -729,11 +732,18 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
     }
 
+    private void injectRuntime() {
+        print(context.runtimeSrc);
+    }
+
+
+
     /**
      * Prints a compilation unit tree.
      */
     @Override
     public Void visitCompilationUnit(final CompilationUnitTree compilationUnit, final Trees trees) {
+//        injectRuntime();
 
         PackageElement packageElement = Util.getElement(compilationUnit.getPackage());
         if (context.isPackageErased(packageElement)) {
@@ -1220,13 +1230,14 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
             String typeFullName = util().getQualifiedName(typeType);
             if (Runnable.class.getName().equals(typeFullName)) {
-                if (arrayComponent) {
-                    print("(");
-                }
-                print("() => void");
-                if (arrayComponent) {
-                    print(")");
-                }
+//                if (arrayComponent) {
+//                    print("(");
+//                }
+//                print("() => void");
+//                if (arrayComponent) {
+//                    print(")");
+//                }
+                print("java.lang.Thread");
                 return this;
             }
             if (typeTree instanceof ParameterizedTypeTree) {
@@ -1465,6 +1476,10 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
         return name;
     }
 
+    private void injectThread() {
+        print("const java = {lang: {Thread: class Thread {public start() {this.run()}}}}\n");
+    }
+
     @Override
     public Void visitClass(final ClassTree classTree, final Trees trees) {
         if (context.util.is_parallel(classTree)) {
@@ -1477,18 +1492,40 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
-            var captured = "private __captured_cvs : any = " + obj;
+            var captured = "public __captured_cvs : any = " + obj;
 
-            var code = String.format("class %s extends WebWorker{\n%s\npublic source = ```\n",
+
+            var code = String.format("class %s extends WebWorker{\n%s\n",
                     classTree.getSimpleName().toString(),
-                    captured);
+                    captured
+            );
             print(code);
-//            var cvs = context.cvsAnalyzer.getCvs(classTree);
+
+            enterScope();
+//            var main = getScope().getMainMethod();
+            classTree.getMembers().stream().forEach(member -> {
+                if (member instanceof MethodTree) {
+//                    ((MethodTree) member).getKind().
+                    if (((MethodTree) member).getModifiers().toString().contains("static")) {
+                        print(member);
+                    }
+                }
+            });
+
+
+
+            print("\npublic source = function () {\n");
+
+
+
             for (ClassTree def : util().getSortedClassDeclarations(compilationUnit.getTypeDecls(), compilationUnit)) {
-                if (cvs.contains(def.getSimpleName().toString())) {
-                    visitClass(def, trees);
+                var name = def.getSimpleName().toString();
+                if (cvs.stream().anyMatch(s -> s.startsWith(name))) {
+//                    visitClass(def, trees);
+                    print(def);
                 }
             }
+            exitScope();
         }
 
         TypeElement classTypeElement = Util.getElement(classTree);
@@ -1781,6 +1818,8 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             print(" {").println().startIndent();
         }
 
+
+
         getAdapter().beforeTypeBody(classTypeElement);
 
         // 407TODO: check if this class a parallel class, and inject the captured cross
@@ -1793,7 +1832,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
-            printIndent().print("private __captured_cvs : any = " + obj );
+            printIndent().print("public __captured_cvs : any = " + obj + ";\n");
         }
 
         if (getScope().innerClassNotStatic && !getScope().interfaceScope && !getScope().enumScope
@@ -2130,7 +2169,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         if (!globals) {
             endIndent().printIndent().print("}");
-
+            if (isCvsClz(classTree)) {
+                printCvsProxy(classTree);
+            }
             if (!getScope().interfaceScope && !getScope().declareClassScope && !getScope().enumScope
                     && !(getScope().enumWrapperClassScope
                             && classTypeElement.getNestingKind() == NestingKind.ANONYMOUS)) {
@@ -2340,18 +2381,26 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         getAdapter().afterType(classTypeElement);
 
-        if (isCvsClz(classTree)) {
-            printCvsProxy(classTree);
-        }
+
 
         if (context.util.is_parallel(classTree)) {
 //            407TODO: should consider the parameters of class
             var entryName = "__entry";
-            var src = String.format("var %s = new %s(); %s.start();\n```}",
+            var src = String.format("var %s = new %s(); %s.run();\n}",
                     entryName,
                     classTree.getSimpleName().toString(),
                     entryName);
             print(src);
+//            var main = getScope().getMainMethod();
+//            print(main);
+//            classTree.getMembers().stream().forEach(member -> {
+//                if (member instanceof MethodTree) {
+//                    if (((MethodTree) member).getName().toString().equals("main")) {
+//                        print(member);
+//                    }
+//                }
+//            });
+            print("}");
         }
 
         return returnNothing();
@@ -2359,9 +2408,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
     private void printCvsProxy(ClassTree tree) {
         var clzName = tree.getSimpleName().toString();
-        var code = String.format("var %s = new Proxy(%s, {" +
-                        "get: function(target, propKey, receiver) {}"
-                        + "})\n",
+        var code = String.format("""
+                        var %s = buildProxy(%s);
+                        """,
                 clzName,
                 "__" + clzName
         );
@@ -5726,6 +5775,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitReturn(ReturnTree returnStatement, Trees trees) {
+        if (isSynchronizedBlock) {
+            print("Comm.unsync(");
+            print(unSyncLock);
+            print(");");
+        }
         print("return");
         if (returnStatement.getExpression() != null) {
             Tree parentFunction = getFirstParent(MethodTree.class, LambdaExpressionTree.class);
@@ -5884,12 +5938,19 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitForLoop(ForLoopTree forLoopTree, Trees trees) {
+        var isSynchronizedFlag = isSynchronizedBlock;
+        if (isSynchronizedFlag) {
+            isSynchronizedBlock = false;
+        }
         print("for(").printArgList(null, forLoopTree.getInitializer()).print("; ").print(forLoopTree.getCondition())
                 .print("; ").printArgList(null, forLoopTree.getUpdate()).print(") ");
         print("{");
         visitBeforeForBody(forLoopTree);
         print(forLoopTree.getStatement()).print(";");
         print("}");
+        if (isSynchronizedFlag) {
+            isSynchronizedBlock = true;
+        }
 
         return returnNothing();
     }
@@ -5902,6 +5963,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitContinue(ContinueTree continueStatement, Trees trees) {
+        if (isSynchronizedBlock) {
+            print("Comm.unsync(");
+            print(unSyncLock);
+            print(");");
+        }
         print("continue");
         if (continueStatement.getLabel() != null) {
             print(" ").print(continueStatement.getLabel().toString());
@@ -5915,6 +5981,11 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitBreak(BreakTree breakStatement, Trees trees) {
+        if (isSynchronizedBlock) {
+            print("Comm.unsync(");
+            print(unSyncLock);
+            print(");");
+        }
         print("break");
         if (breakStatement.getLabel() != null) {
             print(" ").print(breakStatement.getLabel().toString());
@@ -6266,11 +6337,18 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
      */
     @Override
     public Void visitWhileLoop(WhileLoopTree whileLoop, Trees trees) {
+        var isSynchronizedBlockFlag = isSynchronizedBlock;
+        if (isSynchronizedBlockFlag) {
+            isSynchronizedBlock = false;
+        }
         print("while(").print(whileLoop.getCondition()).print(") ");
         print("{");
         visitBeforeWhileBody(whileLoop);
         print(whileLoop.getStatement());
         print("}");
+        if (isSynchronizedBlockFlag) {
+            isSynchronizedBlock = true;
+        }
 
         return returnNothing();
     }
@@ -6543,11 +6621,23 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
     /** Prints a <code>synchronized</code> tree. */
     @Override
     public Void visitSynchronized(SynchronizedTree sync, Trees trees) {
-        report(sync, JSweetProblem.SYNCHRONIZATION);
-        if (sync.getBlock() != null) {
-            print(sync.getBlock());
-        }
+//        report(sync, JSweetProblem.SYNCHRONIZATION);
+//        if (sync.getBlock() != null) {
+//            print(sync.getBlock());
+//        }
+//        return returnNothing();
+//        var syncCode = String.format("ChannelCenter.sync(%s);\n", sync.getExpression());
+        print("Comm.sync(");
+        print(sync.getExpression());
+        print(");");
+        unSyncLock = sync.getExpression();
+        isSynchronizedBlock = true;
+        print(sync.getBlock());
+        isSynchronizedBlock = false;
 
+        print("Comm.unsync(");
+        print(unSyncLock);
+        print(");");
         return returnNothing();
     }
 

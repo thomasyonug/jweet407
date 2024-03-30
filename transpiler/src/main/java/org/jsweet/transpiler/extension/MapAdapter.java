@@ -112,11 +112,11 @@ public class MapAdapter extends PrinterAdapter {
                 // transform the iterator in an array
                 case "keySet":
                     printMacroName(invocation.getMethodName());
-                    print("(<any>Array).from(").print(invocation.getTargetExpression()).print(".keys())");
+                    print("((any)Array).from(").print(invocation.getTargetExpression()).print(".keys())");
                     return true;
                 case "values":
                     printMacroName(invocation.getMethodName());
-                    print("(<any>Array).from(").print(invocation.getTargetExpression()).print(".values())");
+                    print("((any)Array).from(").print(invocation.getTargetExpression()).print(".values())");
                     return true;
                 // in ES6 maps, 'size' is a property, not a method
                 case "size":
