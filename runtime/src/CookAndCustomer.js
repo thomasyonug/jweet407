@@ -1,10 +1,14 @@
 class CookAndCustomer {
 	static main(args) {
 		
-		const cook = new Cook();
-		const customer = new Customer();
+		const cook = new Cook('cook');
+		const customer = new Customer('customer');
+		const third = new Third('third');
 		cook.start();
 		customer.start();
+		third.start();
+		//cook.join();
+		//customer.join();
 	}
 }
 CookAndCustomer["__class"] = "CookAndCustomer";
@@ -21,6 +25,7 @@ class Desk {
 
 class Cook extends WebWorker {
 	debugger
+
 	// __captured_cvs = { 'Desk.count': Desk.count, 'Desk.lock': Desk.lock, 'Desk.food_flag': Desk.food_flag, }
 	source = `
 class __Desk {
@@ -40,6 +45,7 @@ class Cook {
 			while((true)) {{
 					Comm.sync(Desk.lock);
 					{		
+							Comm.join('third');	
 							if (Desk.count === 0){
 									Comm.unsync(Desk.lock);
 									break;
@@ -64,7 +70,8 @@ class Cook {
 	}
 }
 Cook["__class"] = "Cook";
-var __entry = new Cook(); __entry.run();
+ var __entry = new Cook(); __entry.run();
+ Comm.end();
 `}
 
 class Customer extends WebWorker {
@@ -82,6 +89,7 @@ Desk.lock = new Object();
 class Customer {
 	run() {
 			while((true)) {{
+			
 					Comm.sync(Desk.lock);
 						console.log(Desk.count);
 						if (Desk.count === 0){
@@ -107,6 +115,21 @@ class Customer {
 Customer["__class"] = "Customer";
 var __entry = new Customer(); __entry.run();
 console.log("customer end");
+Comm.end();
+`}
+
+class Third extends WebWorker {
+	debugger
+
+	// __captured_cvs = { 'Desk.count': Desk.count, 'Desk.lock': Desk.lock, 'Desk.food_flag': Desk.food_flag, }
+	source = `
+let i=0;
+while(i<10){
+	console.log('third');
+	i++;	
+}
+
+ Comm.end();
 `}
 
 CookAndCustomer.main(null);

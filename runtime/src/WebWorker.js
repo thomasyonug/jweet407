@@ -1,4 +1,4 @@
-const BUF_SIZE = 1024;
+const BUF_SIZE = 8;
 class WebWorker {
 	worker = null;
 	cvsSet = new Set();
@@ -8,11 +8,18 @@ class WebWorker {
 		WebWorker.workerCounter += 1;
 		return WebWorker.workerCounter;
 	}
+	static nameToWorker = new Map();
+	name;
+	constructor(name) {
+		this.name = name;
+	}
+
 	init() {
 		if (this.worker)
 			return;
 		// initialize worker
 		this.worker = new Worker('./initWorker.js');
+		WebWorker.nameToWorker.set(this.name, this.worker);
 		this.worker.onmessage = onmessage;
 		// assign the id to every worker
 		this.workerId = WebWorker.nextId();
@@ -23,6 +30,7 @@ class WebWorker {
 		this.init();
 		this.worker.postMessage({ 'command': 'start', 'source': this.source });
 	}
+
 }
 
 const objects = new Map();
@@ -76,8 +84,15 @@ function onmessage(e) {
 			Atomics.notify(lock, 0);
 			break;
 		}
+		case 'join':{
+			let receiver = e.data.receiver;
+			let arr = e.data.arr;
+			WebWorker.nameToWorker.get(receiver).postMessage({'command': 'join', 'arr': arr});
+			break;
+		}
 	}
 }
+
 // 锁的阻塞队列
 const blockQueues = new Map();
 // 锁的持有者

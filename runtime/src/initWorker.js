@@ -5,7 +5,7 @@
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
-const BUF_SIZE = 1024;
+const BUF_SIZE = 8;
 
 class Logger {
 	static debug(message) {
@@ -88,6 +88,19 @@ class Comm {
 		postMessage({ ...message, lock });
 		Atomics.wait(lock, 0, 0);
 	}
+	static  join(receiver) {
+		const buffer=new SharedArrayBuffer(8);
+		const arr = new Int32Array(buffer);
+		Atomics.store(arr, 0, 0);
+		postMessage({ 'command': 'join', 'arr': arr,'receiver':receiver });
+		while(Atomics.load(arr, 0)===0){ console.log('waiting')	}
+	}
+	static end() {
+		if(joinArr!=undefined){
+			Atomics.store(joinArr, 0, 1);
+		}
+		ended=true;
+	}
 }
 
 /**
@@ -145,6 +158,8 @@ let buildProxy = (target) => {
  *          说明，这个worker将和本worker共享cvs里面的变量
  *          所以，我们需要将每个cvs中的key，都加入到map中。
  */
+let joinArr;
+let ended = false;
 self.onmessage = (event) => {
 	let data = event.data;
 	let command = data.command;
@@ -165,6 +180,15 @@ self.onmessage = (event) => {
 				Logger.error(`${workerName} error: ${error}`);
 			}
 			break;
+		case 'join':
+			joinArr = data.arr;
+			console.log('receive join');
+			if(ended){
+				Atomics.store(joinArr, 0, 1);
+			}
+			break;
+
+
 		default:
 			Logger.warn('Received unknown command:' + event.data.command);
 	}
