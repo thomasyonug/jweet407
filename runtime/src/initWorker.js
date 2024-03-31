@@ -6,7 +6,16 @@
 let workerId;
 let workerName;
 const BUF_SIZE = 16;
-
+//Atomics.wait的时间单位为毫秒，定义其他时间单位到毫秒的倍数
+class TimeUnit{
+	static DAYS = 24*60*60*1000;
+	static HOURS = 60*60*1000;
+	static MINUTES = 60*1000;
+	static SECONDS = 1000;
+	static MILLISECONDS = 1;
+	static MICROSECONDS = 1e-3;
+	static NANOSECONDS = 1e-6;
+}
 function createLock() {
 	const lock = new Int32Array(new SharedArrayBuffer(4));
 	return lock;
@@ -15,7 +24,7 @@ function createLock() {
 let changedObjects = new Map();
 //map存储所有的主线程中的key value
 let mainObject = new Map();
-class ReentrantLock{
+class lock{
 	__key;
 	lock(){	
 		Comm.synchronizePostMessage({ 'command': 'sync', 'key': this.__key, "workerId": workerId });
@@ -27,11 +36,75 @@ class ReentrantLock{
 	}
 	tryLock(time,timeUnit){
 		//TODO
+		if(arguments.length == 0){
+			return Comm.synchronizePostMessageWithReturn({ 'command': 'tryLock', 'key': this.__key, "workerId": workerId })
+		}
+		else{
+			let waitTime= time * timeUnit;
+			//console.log(waitTime);
+			const lock = createLock();
+			postMessage({ 'command': 'sync', 'key': this.__key,'lock':lock, "workerId": workerId });
+			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
+				Atomics.store(lock,0,2);
+				return false;
+			}	
+			return true;
+		}
 	}
 	newCondition(){
 		let condition = new Condition()
 		condition.__lockName = this.__key;
 		return condition;
+	}
+}
+class ReentrantLock extends lock{
+	
+} 
+class readLock extends lock{
+	lock(){
+		
+		Comm.synchronizePostMessage({ 'command': 'readLock.lock', 'key': this.__lockName, "workerId": workerId });	
+		Comm.query();
+	}
+	unlock(){
+		Comm.update(changedObjects);
+		postMessage({ 'command': 'readLock.unlock', 'key': this.__lockName, "workerId": workerId });
+	}
+	newCondition(){
+		let condition = new ReadWriteCondition()
+		condition.__lockName = this.__lockName;
+		return condition;
+	}
+}
+class writeLock {
+
+	lock(){
+		Comm.synchronizePostMessage({ 'command': 'writeLock.lock', 'key': this.__lockName, "workerId": workerId });
+		Comm.query();
+	}
+	unlock(){	
+		Comm.update(changedObjects);
+		postMessage({ 'command': 'writeLock.unlock', 'key': this.__lockName, "workerId": workerId });
+	}
+	newCondition(){
+		let condition = new Condition()
+		condition.__lockName = this.__lockName;
+		return condition;
+	}
+}
+class ReentrantReadWriteLock{
+	__key;
+	rLock = new readLock();
+	wLock = new writeLock();
+	readLock(){
+		this.rLock.__lockName = this.__key;
+		this.rLock.__type = "Read";
+		return this.rLock;
+	}
+	writeLock(){
+		this.wLock.__lockName = this.__key;
+		this.rLock.__type = "Write";
+		return this.wLock;
 	}
 }
 class Condition{
@@ -102,6 +175,16 @@ class Comm {
 		const lock = createLock();
 		postMessage({ ...message, lock });
 		Atomics.wait(lock, 0, 0);
+	}
+	static synchronizePostMessageWithReturn(message){
+		const lock = createLock();
+		postMessage({ ...message, lock });
+		Atomics.wait(lock, 0, 0);
+		if(Atomics.load(lock,0)===2){
+			console.log(3);
+			return false;
+		}
+		return true;
 	}
 }
 
