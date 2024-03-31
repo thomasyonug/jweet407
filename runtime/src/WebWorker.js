@@ -1,4 +1,4 @@
-const BUF_SIZE = 1024;
+const BUF_SIZE = 16;
 class WebWorker {
 	worker = null;
 	cvsSet = new Set();

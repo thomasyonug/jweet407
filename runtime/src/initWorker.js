@@ -5,22 +5,7 @@
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
-const BUF_SIZE = 1024;
-
-class Logger {
-	static debug(message) {
-		console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`);
-	}
-	static info(message) {
-		console.log(`[INFO] ${new Date().toISOString()}: ${message}`);
-	}
-	static warn(message) {
-		console.warn(`[WARN] ${new Date().toISOString()}: ${message}`);
-	}
-	static error(message) {
-		console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
-	}
-}
+const BUF_SIZE = 16;
 
 function createLock() {
 	const lock = new Int32Array(new SharedArrayBuffer(4));
@@ -72,6 +57,7 @@ class Comm {
 		// 如果还有后续的数据传送，要继续接收
 		let flag = Atomics.load(arr, 0);
 		while (flag !== -1) {
+			Logger.debug(str);
 			Atomics.store(arr, 0, 0);
 			// Atomics.wait(arr, 0, 0); // 不能wait，因为store和wait不是原子性，有可能store往还没wait，对方就notify了，导致wait永远等待
 			while (Atomics.load(arr, 0) === 0) { }
