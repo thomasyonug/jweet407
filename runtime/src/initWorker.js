@@ -15,7 +15,36 @@ function createLock() {
 let changedObjects = new Map();
 //map存储所有的主线程中的key value
 let mainObject = new Map();
-
+class ReentrantLock{
+	__key;
+	lock(){	
+		Comm.synchronizePostMessage({ 'command': 'sync', 'key': this.__key, "workerId": workerId });
+		Comm.query();	
+	}
+	unlock(){	
+		Comm.update(changedObjects);		
+		postMessage({ 'command': 'unsync', 'key': this.__key, "workerId": workerId });
+	}
+	tryLock(time,timeUnit){
+		//TODO
+	}
+	newCondition(){
+		let condition = new Condition()
+		condition.__lockName = this.__key;
+		return condition;
+	}
+}
+class Condition{
+	await(){
+		Comm.synchronizePostMessage({ 'command': 'await', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
+	}
+	signal(){
+		postMessage({ 'command': 'signal', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
+	}
+	signalAll(){
+		postMessage({ 'command': 'signalAll', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
+	}
+}
 class Comm {
 	static sync(obj) {
 		const key = obj.__key;

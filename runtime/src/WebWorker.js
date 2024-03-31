@@ -61,6 +61,15 @@ function onmessage(e) {
 		case 'notifyAll':
 			moveAllWaitingToWaitingLock(e.data);
 			break;
+		case 'await':
+			await(e.data);
+			break;
+		case 'signal':
+			signal(e.data);
+			break;
+		case 'signalAll':
+			signalAll(e.data);
+			break;
 		case 'query': {
 			let arr = e.data.arr;
 			responseWithData(arr);
@@ -84,7 +93,8 @@ const blockQueues = new Map();
 const lockHolders = new Map();
 // 锁的等待队列
 const waitingQueues = new Map();
-
+//锁的条件等待队列
+const conditionWaitingQueue = new Map();
 /**
  * 工具函数：
  */
@@ -179,6 +189,27 @@ function wait(data) {
 	lockHolders.delete(key);
 	dispatchLock(key);
 }
+function await(data){
+	let condition = data.key;
+	let lockName = data.lockName;
+	data.count = lockHolders.get(lockName).count; // 记录锁计数器
+	joinConditionWaitingQueue(condition,lockName,data);
+	lockHolders.delete(lockName);
+	dispatchLock(lockName);
+}
+function joinConditionWaitingQueue(condition,lockName,data){
+	if(!conditionWaitingQueue.get(condition)){
+		conditionWaitingQueue.set(condition,new Map())
+	}
+	let lockToData = conditionWaitingQueue.get(condition);
+	if(!lockToData.get(lockName)){
+		lockToData.set(lockName,[])
+	}
+	let dataList = lockToData.get(lockName);
+	dataList.push(data);
+	
+
+}
 
 /**
  * notify要做的操作是：
@@ -208,7 +239,31 @@ function notifyAll(data) {
 		}
 	}
 }
-
+function signal(data){
+	let codition = data.key;
+	let lockName = data.lockName;
+	if(conditionWaitingQueue.has(codition)){
+		let lockToData = conditionWaitingQueue.get(codition);
+		if(lockToData.has(lockName)){
+			let dataList = lockToData.get(lockName);
+			let d = dataList.shift();
+			if(d){
+				joinBlockQueue(lockName,d);
+			}
+		}
+	}
+}
+function signalAll(data){
+	let condition = data.key;
+	if(conditionWaitingQueue.has(condition)){
+		let lockToData = conditionWaitingQueue.get(condition);
+		lockToData.forEach((dataList,lockName) => {
+			dataList.forEach(d => {
+				joinBlockQueue(lockName,d);
+			})
+		})
+	}
+}
 /**
  * 序列化一个Map为Int32Array buffer
  * @param {*} arr 
