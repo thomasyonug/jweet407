@@ -5,23 +5,17 @@
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
-const BUF_SIZE = 1024;
-
-class Logger {
-	static debug(message) {
-		console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`);
-	}
-	static info(message) {
-		console.log(`[INFO] ${new Date().toISOString()}: ${message}`);
-	}
-	static warn(message) {
-		console.warn(`[WARN] ${new Date().toISOString()}: ${message}`);
-	}
-	static error(message) {
-		console.error(`[ERROR] ${new Date().toISOString()}: ${message}`);
-	}
+const BUF_SIZE = 16;
+//Atomics.wait的时间单位为毫秒，定义其他时间单位到毫秒的倍数
+class TimeUnit{
+	static DAYS = 24*60*60*1000;
+	static HOURS = 60*60*1000;
+	static MINUTES = 60*1000;
+	static SECONDS = 1000;
+	static MILLISECONDS = 1;
+	static MICROSECONDS = 1e-3;
+	static NANOSECONDS = 1e-6;
 }
-
 function createLock() {
 	const lock = new Int32Array(new SharedArrayBuffer(4));
 	return lock;
@@ -30,7 +24,138 @@ function createLock() {
 let changedObjects = new Map();
 //map存储所有的主线程中的key value
 let mainObject = new Map();
+class lock{
+	__key;
+	lock(){	
+		Comm.synchronizePostMessage({ 'command': 'sync', 'key': this.__key, "workerId": workerId });
+		Comm.query();	
+	}
+	unlock(){	
+		Comm.update(changedObjects);		
+		postMessage({ 'command': 'unsync', 'key': this.__key, "workerId": workerId });
+	}
+	tryLock(time,timeUnit){
+		//TODO
+		if(arguments.length == 0){
+			return Comm.synchronizePostMessageWithReturn({ 'command': 'tryLock', 'key': this.__key, "workerId": workerId })
+		}
+		else{
+			let waitTime= time * timeUnit;
+			//console.log(waitTime);
+			const lock = createLock();
+			postMessage({ 'command': 'sync', 'key': this.__key,'lock':lock, "workerId": workerId });
+			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
+				Atomics.store(lock,0,2);
+				return false;
+			}	
+			return true;
+		}
+	}
+	newCondition(){
+		let condition = new Condition()
+		condition.__lockName = this.__key;
+		return condition;
+	}
+}
+class ReentrantLock extends lock{
+	
+} 
+class readLock extends lock{
+	lock(){
+		
+		Comm.synchronizePostMessage({ 'command': 'readLock.lock', 'key': this.__lockName, "workerId": workerId });	
+		Comm.query();
+	}
+	unlock(){
+		Comm.update(changedObjects);
+		postMessage({ 'command': 'readLock.unlock', 'key': this.__lockName, "workerId": workerId });
+	}
+	tryLock(time,timeUnit){
+		//TODO
+		if(arguments.length == 0){
+			return Comm.synchronizePostMessageWithReturn({ 'command': 'readLock.tryLock', 'key': this.__lockName, "workerId": workerId })
+		}
+		else{
+			let waitTime= time * timeUnit;
+			//console.log(waitTime);
+			const lock = createLock();
+			postMessage({ 'command': 'sync', 'key': this.__lockName,'lock':lock, "workerId": workerId });
+			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
+				Atomics.store(lock,0,2);
+				return false;
+			}	
+			return true;
+		}
+	}
+	newCondition(){
+		let condition = new ReadWriteCondition()
+		condition.__lockName = this.__lockName;
+		return condition;
+	}
+}
+class writeLock {
 
+	lock(){
+		Comm.synchronizePostMessage({ 'command': 'writeLock.lock', 'key': this.__lockName, "workerId": workerId });
+		Comm.query();
+	}
+	unlock(){	
+		Comm.update(changedObjects);
+		postMessage({ 'command': 'writeLock.unlock', 'key': this.__lockName, "workerId": workerId });
+	}
+	tryLock(time,timeUnit){
+
+		if(arguments.length == 0){
+			return Comm.synchronizePostMessageWithReturn({ 'command': 'writeLock.tryLock', 'key': this.__lockName, "workerId": workerId })
+		}
+		else{
+			let waitTime= time * timeUnit;
+			//console.log(waitTime);
+			const lock = createLock();
+			postMessage({ 'command': 'sync', 'key': this.__lockName,'lock':lock, "workerId": workerId });
+			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
+				Atomics.store(lock,0,2);
+				return false;
+			}	
+			return true;
+		}
+	}
+	newCondition(){
+		let condition = new Condition()
+		condition.__lockName = this.__lockName;
+		return condition;
+	}
+}
+class ReentrantReadWriteLock{
+	__key;
+	rLock = new readLock();
+	wLock = new writeLock();
+	readLock(){
+		this.rLock.__lockName = this.__key;
+		this.rLock.__type = "Read";
+		return this.rLock;
+	}
+	writeLock(){
+		this.wLock.__lockName = this.__key;
+		this.rLock.__type = "Write";
+		return this.wLock;
+	}
+}
+class Condition{
+	await(){
+		Comm.update(changedObjects);
+		Comm.synchronizePostMessage({ 'command': 'await', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
+	}
+	signal(){
+		postMessage({ 'command': 'signal', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
+	}
+	signalAll(){
+		postMessage({ 'command': 'signalAll', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
+	}
+}
+class StampedLock{
+	
+}
 class Comm {
 	static sync(obj) {
 		const key = obj.__key;
@@ -54,7 +179,7 @@ class Comm {
 	static update(changedObj) {
 		if (changedObj.size === 0) return;
 		Logger.info('子线程一次性set:');
-		Logger.info(changedObj);
+		//Logger.info(changedObj);
 		this.synchronizePostMessage({ 'command': 'update', 'obj': changedObj });
 		changedObj.clear();
 	}
@@ -72,6 +197,7 @@ class Comm {
 		// 如果还有后续的数据传送，要继续接收
 		let flag = Atomics.load(arr, 0);
 		while (flag !== -1) {
+			//Logger.debug(str);
 			Atomics.store(arr, 0, 0);
 			// Atomics.wait(arr, 0, 0); // 不能wait，因为store和wait不是原子性，有可能store往还没wait，对方就notify了，导致wait永远等待
 			while (Atomics.load(arr, 0) === 0) { }
@@ -87,6 +213,16 @@ class Comm {
 		const lock = createLock();
 		postMessage({ ...message, lock });
 		Atomics.wait(lock, 0, 0);
+	}
+	static synchronizePostMessageWithReturn(message){
+		const lock = createLock();
+		postMessage({ ...message, lock });
+		Atomics.wait(lock, 0, 0);
+		if(Atomics.load(lock,0)===2){
+			console.log(3);
+			return false;
+		}
+		return true;
 	}
 }
 
@@ -133,6 +269,7 @@ let buildProxy = (target) => {
 			}
 			clz[propKey] = newValue;
 			mainObject[key] = newValue;
+			mainObject.set(key,newValue)
 			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
 			if (!(newValue instanceof Object)) { changedObjects.set(key, newValue); }
 			return true;

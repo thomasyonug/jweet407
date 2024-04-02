@@ -1,4 +1,4 @@
-const BUF_SIZE = 1024;
+const BUF_SIZE = 16;
 class WebWorker {
 	worker = null;
 	cvsSet = new Set();
@@ -44,6 +44,7 @@ function onmessage(e) {
 	const data = e.data;
 	const command = data.command;
 	e.data.count = 1;
+	e.data.type = 'Write';
 	switch (command) {
 		// require a lock
 		case 'sync':
@@ -59,8 +60,46 @@ function onmessage(e) {
 			notify(e.data)
 			break;
 		case 'notifyAll':
-			moveAllWaitingToWaitingLock(e.data);
+			notifyAll(e.data);
 			break;
+		case 'await':
+			await(e.data);
+			break;
+		case 'signal':
+			signal(e.data);
+			break;
+		case 'signalAll':
+			signalAll(e.data);
+			break;
+		case 'tryLock':{
+			tryLock(e.data);
+			break;
+		}
+		case 'readLock.tryLock':{
+			e.data.type= 'Read';
+			tryLock(e.data);
+		}
+		case 'writeLock.tryLock':{
+			e.data.type='Write';
+			tryLock(e.data);
+		}
+		case 'readLock.lock':
+			e.data.type = 'Read';
+			sync(e.data);
+			break;
+		case 'writeLock.lock':
+			e.data.type = 'Write';
+			sync(e.data);
+			break;
+		
+		case 'readLock.unlock':{
+			exitSync(e.data);
+			break;
+		}
+		case 'writeLock.unlock':{
+			exitSync(e.data);
+			break;
+		}
 		case 'query': {
 			let arr = e.data.arr;
 			responseWithData(arr);
@@ -76,6 +115,12 @@ function onmessage(e) {
 			Atomics.notify(lock, 0);
 			break;
 		}
+		case 'syncRW':
+            syncRW(e.data);
+            break;        
+        case 'unsyncRW':
+            exitSyncRW(e.data);
+            break;
 	}
 }
 // 锁的阻塞队列
@@ -84,7 +129,8 @@ const blockQueues = new Map();
 const lockHolders = new Map();
 // 锁的等待队列
 const waitingQueues = new Map();
-
+//锁的条件等待队列
+const conditionWaitingQueue = new Map();
 /**
  * 工具函数：
  */
@@ -94,6 +140,18 @@ function joinBlockQueue(key, data) {
 	}
 	blockQueues.get(key).push(data);
 }
+function deleteTimeoutLock(blockQueues,key){
+	let set = blockQueues.get(key);
+	if(!set){
+		return ;
+	}
+	for(let i =set.length-1;i>=0;i--){
+		if(Atomics.load(set[i].lock)===2){
+			set.splice(i,1);
+		}
+	}
+	
+}
 function joinWaitingQueue(key, data) {
 	if (!waitingQueues.has(key)) {
 		waitingQueues.set(key, []);
@@ -102,6 +160,10 @@ function joinWaitingQueue(key, data) {
 }
 function releaseLock(lock) {
 	Atomics.store(lock, 0, 1);
+	Atomics.notify(lock, 0);
+}
+function failReleaseLock(lock){
+	Atomics.store(lock, 0, 2);
 	Atomics.notify(lock, 0);
 }
 function dispatchLock(key) {
@@ -138,33 +200,84 @@ function responseWithData(arr) {
  * 		1.1. 如果是同一线程，持有锁的数量加1
  *  	1.2. 如果不是同一线程，加入阻塞队列，等待获取锁
  */
+
+
+
 function sync(data) {
+	let type = data.type;
 	let key = data.key;
-	if (lockHolders.get(key)) {
-		if (lockHolders.get(key).workerId !== data.workerId) {
-			joinBlockQueue(key, data);
-		} else {
-			lockHolders.get(key).count += 1;
+	if(type === 'Write'){
+		if(lockHolders.get(key)){
+			if(lockHolders.get(key).workerId !== data.workerId || lockHolders.get(key).type === 'Read'){
+				joinBlockQueue(key,data);
+			}else{
+				lockHolders.get(key).count += 1;
+				releaseLock(data.lock);	
+
+			}
+		}else{
+			lockHolders.set(key,data);
 			releaseLock(data.lock);
+
 		}
-	} else {
-		lockHolders.set(key, data);
-		releaseLock(data.lock);
+	}else{
+		if(lockHolders.get(key)){
+			if(lockHolders.get(key).workerId !== data.workerId && lockHolders.get(key).type === 'Write')	{
+				joinBlockQueue(key,data);
+			}else{
+				lockHolders.get(key).count += 1;
+				releaseLock(data.lock);	
+
+			}	
+		}else{
+			lockHolders.set(key,data);
+			releaseLock(data.lock);
+
+		}
+	
 	}
+	
 }
+
+
 /**
  * exitSync要做的操作是：
  * 判断锁的数量是否为0，如果是0，释放该锁，重新分配锁
  */
 function exitSync(data) {
 	let key = data.key;
+	let type = lockHolders.get(key).type;
 	if (lockHolders.get(key)) {
 		//持有锁的数量减1
 		lockHolders.get(key).count -= 1;
 		//判断是否释放锁
 		if (lockHolders.get(key).count === 0) {
+			//删除超时请求
+			deleteTimeoutLock(blockQueues,key);
 			lockHolders.delete(key);
-			dispatchLock(key);
+			//取出阻塞队列的第一个元素
+			let dataList = blockQueues.get(key);
+			if(!dataList){
+				return;
+			}
+			let first = dataList.shift();
+			if(!first){
+				return;
+			}
+			releaseLock(first.lock);
+			lockHolders.set(key, first);
+			//如果阻塞队列第一个是申请读锁，那么将所有读都释放
+			if(first.type === 'Read'){
+				//从后向前遍历，释放所有读锁
+				for(let i = dataList.length - 1; i >= 0; i--){
+					if(dataList[i].type === 'Read'){
+						releaseLock(dataList[i].lock);
+						lockHolders.get(key).count += 1;
+						dataList.splice(i,1);
+					}
+				}
+			}
+				
 		}
 	}
 }
@@ -178,6 +291,27 @@ function wait(data) {
 	joinWaitingQueue(key, data);
 	lockHolders.delete(key);
 	dispatchLock(key);
+}
+function await(data){
+	let condition = data.key;
+	let lockName = data.lockName;
+	data.count = lockHolders.get(lockName).count; // 记录锁计数器
+	joinConditionWaitingQueue(condition,lockName,data);
+	lockHolders.delete(lockName);
+	dispatchLock(lockName);
+}
+function joinConditionWaitingQueue(condition,lockName,data){
+	if(!conditionWaitingQueue.get(condition)){
+		conditionWaitingQueue.set(condition,new Map())
+	}
+	let lockToData = conditionWaitingQueue.get(condition);
+	if(!lockToData.get(lockName)){
+		lockToData.set(lockName,[])
+	}
+	let dataList = lockToData.get(lockName);
+	dataList.push(data);
+	
+
 }
 
 /**
@@ -208,6 +342,68 @@ function notifyAll(data) {
 		}
 	}
 }
+function signal(data){
+	let codition = data.key;
+	let lockName = data.lockName;
+	if(conditionWaitingQueue.has(codition)){
+		let lockToData = conditionWaitingQueue.get(codition);
+		if(lockToData.has(lockName)){
+			let dataList = lockToData.get(lockName);
+			let d = dataList.shift();
+			if(d){
+				joinBlockQueue(lockName,d);
+			}
+		}
+	}
+}
+function signalAll(data){
+	let condition = data.key;
+	if(conditionWaitingQueue.has(condition)){
+		let lockToData = conditionWaitingQueue.get(condition);
+		lockToData.forEach((dataList,lockName) => {
+			dataList.forEach(d => {
+				joinBlockQueue(lockName,d);
+			})
+		})
+	}
+}
+function tryLock(data){
+	let key = data.key;
+	let type =data.type;
+
+	if(type === 'Write'){
+		if(lockHolders.get(key)){
+			if(lockHolders.get(key).workerId !== data.workerId || lockHolders.get(key).type === 'Read'){
+				failReleaseLock(data.lock);
+			}else{
+				lockHolders.get(key).count += 1;
+				releaseLock(data.lock);	
+
+			}
+		}else{
+			lockHolders.set(key,data);
+			releaseLock(data.lock);
+
+		}
+	}else{
+		if(lockHolders.get(key)){
+			if(lockHolders.get(key).workerId !== data.workerId && lockHolders.get(key).type === 'Write')	{
+				failReleaseLock(data.lock);
+			}else{
+				lockHolders.get(key).count += 1;
+				releaseLock(data.lock);	
+
+			}	
+		}else{
+			lockHolders.set(key,data);
+			releaseLock(data.lock);
+
+		}
+	
+	}
+	
+}
+
 
 /**
  * 序列化一个Map为Int32Array buffer
