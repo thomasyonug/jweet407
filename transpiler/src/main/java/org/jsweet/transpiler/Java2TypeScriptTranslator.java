@@ -1824,7 +1824,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             StringBuilder obj = new StringBuilder("{");
             for (var cv : volatileCvs) {
                 // var cvname = cv.toString();
-                obj.append(String.format("'%s':%s,", cv, cv));
+                obj.append(String.format("'%s':'%s',", cv, cv));
             }
             obj.deleteCharAt(obj.length()-1);
             obj.append("}");
