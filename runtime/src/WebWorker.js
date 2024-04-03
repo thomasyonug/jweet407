@@ -115,14 +115,207 @@ function onmessage(e) {
 			Atomics.notify(lock, 0);
 			break;
 		}
-		case 'syncRW':
-            syncRW(e.data);
-            break;        
-        case 'unsyncRW':
-            exitSyncRW(e.data);
-            break;
+		case 'readLock': {
+			e.data.type = 'Read';
+			applyLock(e.data);
+			break;
+		}
+		case 'unlockRead':{
+			e.data.type = 'Read';
+			exitLock(e.data);
+			break;
+		}
+		case 'writeLock':{	
+			e.data.type = 'Write';
+			applyLock(e.data);
+			break;
+		}
+		case 'unlockWrite':{
+			e.data.type = 'Write';
+			exitLock(e.data);
+			break;
+		}
+		case 'tryOptimisticRead':{
+			e.data.type = 'OptimisticRead';
+			applyLock(e.data);
+			break;
+		}
+		case 'validate':{
+			validate(e.data);
+			break;
+		}
+		case 'tryConvertToWriteLock':{
+			e.data.type = 'Write';
+			tryConvertLock(e.data);
+			break;
+		}
+		case 'tryConvertToReadLock':{
+			e.data.type = 'Read';
+			tryConvertLock(e.data);
+			break;
+		}
+		case 'tryReadLock':{
+			e.data.type = 'Read';
+			e.data.try = 'True';
+			applyLock(e.data);
+			break;
+		}
+		case 'tryWriteLock':{
+			e.data.type = 'Write';
+			e.data.try = 'True';
+			applyLock(e.data);
+			break;
+		}
 	}
 }
+//stampedLock begin
+const keyToState = new Map();
+stampedLockBlockQueues = new Map();
+function applyLock(data){
+	if(!keyToState.has(data.key)){
+		keyToState.set(data.key,256);
+	}
+	state = keyToState.get(data.key);
+	if(data.type === 'Read'){
+		if((state&128) === 0 && (state&127) <127 ){
+			state += 1;
+			keyToState.set(data.key,state);
+			releaseStampLock(data.lock,state);
+			
+		}
+		else{
+			if(data.try === 'True'){
+				releaseStampLock(data.lock,0);
+			}else{
+				joinStampBlockQueue(data);
+			}
+		}
+	}
+	else if (data.type === 'Write'){
+		if((state&255) ==0){
+			state += 128;//设置写锁
+			keyToState.set(data.key,state);
+			releaseStampLock(data.lock,state);
+		}
+		else{
+			if(data.try === 'True'){
+				releaseStampLock(data.lock,0);
+			}else{
+				joinStampBlockQueue(data);
+			}
+		}
+	}
+	else if(data.type === 'OptimisticRead'){
+		if((state&128)===0){
+			releaseStampLock(data.lock,state>>>7 <<7);
+		}else{
+			releaseStampLock(data.lock,0);
+		}
+	}
+}
+function exitLock(data){
+	let stamp = data.stamp;
+	let key = data.key;
+	if(data.type === 'Read'){
+		if((stamp&128) === 1){
+			console.log("error: the lock is not read lock")
+			return ;
+		}
+		keyToState.set(key,keyToState.get(key)-1);
+		if((keyToState.get(key)&255) ===0){
+			dispatchStampLock(data);
+		}
+	}
+	else{
+		if((state&128) === 0){
+			console.log("error: the lock is not write lock")
+			return ;
+		}
+		keyToState.set(key,keyToState.get(key)-128); //释放写锁
+		keyToState.set(key,keyToState.get(key)+256); //版本号加1
+		
+		dispatchStampLock(data);
+	}
+}
+function validate(data){
+	let stamp = data.stamp;
+	if((keyToState.get(data.key)>>>7 <<7)=== stamp){
+		releaseStampLock(data.lock,1);
+	}else{
+		releaseStampLock(data.lock,0);
+	
+	}
+}
+function releaseStampLock(lock,state){
+	Atomics.store(lock,0,1);
+	Atomics.store(lock,1,state);
+	Atomics.notify(lock,0);
+	
+
+}
+function dispatchStampLock(data){
+	let key = data.key;
+	let set = stampedLockBlockQueues.get(key);
+	if(!set){
+		return;
+	}
+	const d = set.shift();
+	if (!d) {
+		return;
+	}
+	
+	//如果是读锁，那么将所有读锁都释放
+	if(d.type === 'Read'){
+		releaseStampLock(d.lock,keyToState.get(key)+1);
+		keyToState.set(key,keyToState.get(key)+1);
+		for(let i = set.length - 1; i >= 0; i--){
+			if(set[i].type === 'Read'){
+				releaseLock(set[i].lock,keyToState.get(key)+1);
+				keyToState.set(key,keyToState.get(key)+1);
+				set.splice(i,1);
+			}
+		}
+	}else{
+		releaseStampLock(d.lock,keyToState.get(key)+128);
+		keyToState.set(key,keyToState.get(key)+128);
+	}
+
+	
+}
+function joinStampBlockQueue(data){
+	let key = data.key;
+	if(!stampedLockBlockQueues.has(key)){
+		stampedLockBlockQueues.set(key,[]);
+	}
+	stampedLockBlockQueues.get(key).push(data);
+}
+function tryConvertLock(data){
+	let stamp = data.stamp;
+	let key = data.key;
+	let type = data.type;
+	if(type === 'Write'){
+		if((stamp&128) == 128){
+			releaseStampLock(data.lock,stamp); //本身是写锁，无需转换
+		}else if ((stamp&128) == 0 && (stamp&127) == 1){
+			releaseStampLock(data.lock,stamp+127); //转换为写锁,释放读锁
+			keyToState.set(key,stamp+127);
+
+		}else{
+			releaseStampLock(data.lock,0); //转化失败
+		}
+	}else{
+		if((stamp&128) == 128){
+			releaseStampLock(data.lock,stamp-128+256+1); //释放写锁，版本号+1，转换为读锁
+			keyToState.set(key,stamp-128+256+1);
+		}else if((stamp&128) == 0){
+			releaseStampLock(data.lock,stamp); //本身是读锁，无需转换
+		}else{
+			releaseStampLock(data.lock,0); //转化失败
+		}
+	}
+}
+
+//stampedLock end
 // 锁的阻塞队列
 const blockQueues = new Map();
 // 锁的持有者
