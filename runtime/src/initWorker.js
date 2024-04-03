@@ -153,8 +153,16 @@ class Condition{
 		postMessage({ 'command': 'signalAll', 'key': this.__key,'lockName':this.__lockName, "workerId": workerId });
 	}
 }
-class StampedLock{
-	
+class StampedLock {
+	tryOptimisticRead() {
+	}
+
+	tryLock() {
+
+	}
+	validate() {
+
+	}
 }
 class Comm {
 	static sync(obj) {
@@ -248,26 +256,36 @@ function deserialize2MapStr(buf) {
  * return a proxyHandler associated with the target
  * @param {any} target 
  */
-let buildProxy = (target) => {
+let buildProxy = (target, prefix = "") => {
 	// get the name of the class
-	let className = target.prototype.constructor.name;
+	let className; 
+	if (prefix === "") {
+		className = target.prototype.constructor.name;
+	} else {
+		className = prefix;
+	}
 	// trim the redundant "__" in the class name
 	className = className.replace(/^__+/, '');
 	// create a new object in the container
 	return new Proxy(target, {
 		get: function (_target, propKey) {
 			let key = className + '.' + propKey;
+			console.log("get: " + key)
+			// 如果是对象，递归创建代理
+			if (typeof _target[propKey] === 'object' && _target.__type != 'Lock') {
+				return buildProxy(_target[propKey], key);
+			}
 			if (mainObject.has(key)) {
 				return mainObject.get(key);
 			}
 			return _target[propKey];
 		},
-		set: function (clz, propKey, newValue) {
+		set: function (_target, propKey, newValue) {
 			let key = className + '.' + propKey;
-			if (newValue instanceof Object) {
+			if (newValue instanceof Object && _target.__type != 'Lock') {
 				newValue.__key = key;
 			}
-			clz[propKey] = newValue;
+			_target[propKey] = newValue;
 			mainObject[key] = newValue;
 			mainObject.set(key,newValue)
 			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
