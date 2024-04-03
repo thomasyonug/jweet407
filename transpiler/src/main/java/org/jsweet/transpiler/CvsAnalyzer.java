@@ -22,6 +22,7 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
     private Stack<Set<String>> clzScope; // 存储类的作用域
     private Set<String> currentOutScope; // 当前类之外的作用域
     private HashMap<ClassTree, Set<String>> cvsScope; // 存储类与其交叉变量的映射
+    private HashMap<ClassTree, Set<String>> volatileCvsScope; // 存储类与其volatile变量的映射
     private static final Set<String> JAVA_KEYWORDS = new HashSet<>();
 
     // 初始化Java关键字集合
@@ -42,6 +43,10 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
      */
     public Set<String> getCvs(ClassTree trees) {
         return cvsScope.get(trees);
+    }
+
+    public Set<String> getVolatileCvs(ClassTree trees) {
+        return volatileCvsScope.get(trees);
     }
 
     private void enterScope() {
@@ -136,6 +141,7 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
     public CvsAnalyzer() {
         clzScope = new Stack<>();
         cvsScope = new HashMap<>();
+        volatileCvsScope = new HashMap<>();
     }
 
     @Override
@@ -154,9 +160,20 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
         if (!Util.is_parallel(node)) {
             // return super.visitClass(node, trees);
             exitScope();
+            var members = node.getMembers();
+            for (var member : members) {
+                if (member instanceof JCVariableDecl) {
+                    JCVariableDecl variableDecl = (JCVariableDecl) member;
+                    if (variableDecl.getModifiers().getFlags().contains(Modifier.VOLATILE)) {
+                        // 如果是静态变量，则记录到当前类的作用域
+                        Set<String> volatileCvs = volatileCvsScope.getOrDefault(node, new HashSet<String>());
+                        volatileCvs.add(variableDecl.getName().toString());
+                        volatileCvsScope.put(node, volatileCvs);
+                    }
+                }
+            }
             return null;
         }
-        
         var members = node.getMembers();
         for (var member : members) {
             if (member instanceof JCVariableDecl) {
@@ -165,6 +182,12 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
                     // 如果是静态变量，则记录到当前类的作用域
                     addVar(node.getSimpleName().toString()+"."+variableDecl.getName().toString());
                     currentOutScope.add(node.getSimpleName().toString()+"."+variableDecl.getName().toString());
+                }
+                if (variableDecl.getModifiers().getFlags().contains(Modifier.VOLATILE)) {
+                    // 如果是静态变量，则记录到当前类的作用域
+                    Set<String> volatileCvs = volatileCvsScope.getOrDefault(node, new HashSet<String>());
+                    volatileCvs.add(variableDecl.getName().toString());
+                    volatileCvsScope.put(node, volatileCvs);
                 }
             }
         }

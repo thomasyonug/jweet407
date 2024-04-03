@@ -35,7 +35,7 @@ class lock{
 		postMessage({ 'command': 'unsync', 'key': this.__key, "workerId": workerId });
 	}
 	tryLock(time,timeUnit){
-		
+
 		if(arguments.length == 0){
 			if(Comm.synchronizePostMessageWithReturn({ 'command': 'tryLock', 'key': this.__key, "workerId": workerId })){
 				Comm.query();
@@ -53,7 +53,7 @@ class lock{
 				Atomics.store(lock,0,2);
 				return false;
 			}
-			Comm.query();	
+			Comm.query();
 			return true;
 		}
 	}
@@ -64,6 +64,7 @@ class lock{
 	}
 }
 class ReentrantLock extends lock{
+	
 } 
 class readLock extends lock{
 	lock(){
@@ -76,7 +77,7 @@ class readLock extends lock{
 		postMessage({ 'command': 'readLock.unlock', 'key': this.__lockName, "workerId": workerId });
 	}
 	tryLock(time,timeUnit){
-		
+
 		if(arguments.length == 0){
 			if(Comm.synchronizePostMessageWithReturn({ 'command': 'readLock.tryLock', 'key': this.__lockName, "workerId": workerId })){
 				Comm.query();
@@ -180,7 +181,7 @@ class StampedLock{
 	unlockWrite(stamp){
 		Comm.update(changedObjects);
 		postMessage({ 'command': 'unlockWrite', 'key': this.__key, 'stamp':stamp,"workerId": workerId });
-		
+
 	}
 	tryReadLock(time,timeUnit){
 		//Todo
@@ -192,17 +193,17 @@ class StampedLock{
 			return l;
 		}else{
 			let waitTime= time * timeUnit;
-			
+
 			const lock = createLock();
 			postMessage({ 'command': 'readLock', 'key': this.__key, "workerId": workerId });
 			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
 				Atomics.store(lock,0,2);
 				return 0;
-			}	
+			}
 			return Atomics.load(lock,1);
 		}
 
-		
+
 
 
 	}
@@ -216,13 +217,13 @@ class StampedLock{
 			return l;
 		}else{
 			let waitTime= time * timeUnit;
-			
+
 			const lock = createLock();
 			postMessage({ 'command': 'writeLock', 'key': this.__key, "workerId": workerId });
 			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
 				Atomics.store(lock,0,2);
 				return 0;
-			}	
+			}
 			return Atomics.load(lock,1);
 		}
 	}
@@ -231,15 +232,15 @@ class StampedLock{
 		Comm.query();
 		return l;
 	}
-	validate(stamp){	
+	validate(stamp){
 		return this.syncPostMessage({ 'command': 'validate', 'key': this.__key,'stamp':stamp, "workerId": workerId });
 	}
 	tryConvertToWriteLock(stamp){
-		
+
 		return this.syncPostMessage({ 'command': 'tryConvertToWriteLock', 'key': this.__key, 'stamp':stamp, "workerId": workerId });
 	}
 	tryConvertToReadLock(stamp){
-		
+
 		return this.syncPostMessage({ 'command': 'tryConvertToReadLock', 'key': this.__key, 'stamp':stamp, "workerId": workerId });
 	}
 	syncPostMessage(message){
@@ -342,27 +343,37 @@ function deserialize2MapStr(buf) {
  * return a proxyHandler associated with the target
  * @param {any} target 
  */
-let buildProxy = (target) => {
+let buildProxy = (target, prefix = "") => {
 	// get the name of the class
-	let className = target.prototype.constructor.name;
+	let className;
+	if (prefix === "") {
+		className = target.prototype.constructor.name;
+	} else {
+		className = prefix;
+	}
 	// trim the redundant "__" in the class name
 	className = className.replace(/^__+/, '');
 	// create a new object in the container
 	return new Proxy(target, {
 		get: function (_target, propKey) {
 			let key = className + '.' + propKey;
+			console.log("get: " + key)
+			// 如果是对象，递归创建代理
+			if (Array.isArray(_target[propKey])) {
+				return buildProxy(_target[propKey], key);
+			}
 			if (mainObject.has(key)) {
 				return mainObject.get(key);
 			}
 			return _target[propKey];
 		},
-		set: function (clz, propKey, newValue) {
+		set: function (_target, propKey, newValue) {
 			let key = className + '.' + propKey;
-			if (newValue instanceof Object) {
+			if (newValue instanceof Object && _target.__type != 'Lock') {
 				newValue.__key = key;
 			}
-			clz[propKey] = newValue;
-			mainObject[key] = newValue;
+			_target[propKey] = newValue;
+
 			mainObject.set(key,newValue)
 			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
 			if (!(newValue instanceof Object)) { changedObjects.set(key, newValue); }

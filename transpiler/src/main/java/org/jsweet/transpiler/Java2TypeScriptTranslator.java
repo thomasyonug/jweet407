@@ -1492,7 +1492,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.append(String.format("'%s':%s,", cv, cv));
             }
             obj.append("}");
-            var captured = "public __captured_cvs : any = " + obj;
+            var captured = "public __captured_cvs : any = " + obj + ";\n";
 
 
             var code = String.format("class %s extends WebWorker{\n%s\n",
@@ -1557,7 +1557,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         enterScope();
         getScope().name = name;
-
+        
         ClassTree parent = getParent(ClassTree.class);
         List<TypeParameterElement> parentTypeVars = new ArrayList<>();
         if (parent != null) {
@@ -1816,6 +1816,21 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 }
             }
             print(" {").println().startIndent();
+        }
+
+        if (context.util.is_containVolatileField(classTree)) {
+            // 407TODO: check if this class contains volatile var.
+            Set<String> volatileCvs = context.cvsAnalyzer.getVolatileCvs(classTree);
+            StringBuilder obj = new StringBuilder("{");
+            for (var cv : volatileCvs) {
+                // var cvname = cv.toString();
+                obj.append(String.format("'%s':'%s',", cv, cv));
+            }
+            obj.deleteCharAt(obj.length()-1);
+            obj.append("}");
+            var captured = "\n\tpublic __captured_volatile_cvs : any = " + obj + ";\n";
+
+            print(captured).println();
         }
 
 

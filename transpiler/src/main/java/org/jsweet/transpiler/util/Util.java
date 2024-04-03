@@ -145,6 +145,18 @@ public class Util {
                         .anyMatch(tree -> tree.toString().equals("Runnable")));
     }
 
+    public static boolean is_containVolatileField(ClassTree clzTree) {
+        for (Tree member : clzTree.getMembers()) {
+            if (member.getKind() == Kind.VARIABLE) {
+                VariableTree varTree = (VariableTree) member;
+                if (varTree.getModifiers().getFlags().contains(Modifier.VOLATILE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * @return true if given type is not null and Set or subtype of Set (generic or
      *         not)
