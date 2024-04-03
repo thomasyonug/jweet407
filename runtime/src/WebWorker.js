@@ -253,7 +253,9 @@ function releaseStampLock(lock,state){
 	
 
 }
+
 function dispatchStampLock(data){
+	deleteTimeoutLock(stampedLockBlockQueues,data.key);
 	let key = data.key;
 	let set = stampedLockBlockQueues.get(key);
 	if(!set){

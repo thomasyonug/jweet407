@@ -195,7 +195,7 @@ class StampedLock{
 			let waitTime= time * timeUnit;
 
 			const lock = createLock();
-			postMessage({ 'command': 'readLock', 'key': this.__key, "workerId": workerId });
+			postMessage({ 'command': 'readLock', 'key': this.__key,'lock':lock, "workerId": workerId });
 			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
 				Atomics.store(lock,0,2);
 				return 0;
@@ -219,7 +219,7 @@ class StampedLock{
 			let waitTime= time * timeUnit;
 
 			const lock = createLock();
-			postMessage({ 'command': 'writeLock', 'key': this.__key, "workerId": workerId });
+			postMessage({ 'command': 'writeLock', 'key': this.__key,'lock':lock, "workerId": workerId });
 			if(Atomics.wait(lock, 0, 0,waitTime)==="timed-out"){
 				Atomics.store(lock,0,2);
 				return 0;
@@ -357,7 +357,7 @@ let buildProxy = (target, prefix = "") => {
 	return new Proxy(target, {
 		get: function (_target, propKey) {
 			let key = className + '.' + propKey;
-			console.log("get: " + key)
+			//console.log("get: " + key)
 			// 如果是对象，递归创建代理
 			if (Array.isArray(_target[propKey])) {
 				return buildProxy(_target[propKey], key);
