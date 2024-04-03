@@ -272,7 +272,7 @@ let buildProxy = (target, prefix = "") => {
 			let key = className + '.' + propKey;
 			console.log("get: " + key)
 			// 如果是对象，递归创建代理
-			if (typeof _target[propKey] === 'object' && _target.__type != 'Lock') {
+			if (Array.isArray(_target[propKey])) {
 				return buildProxy(_target[propKey], key);
 			}
 			if (mainObject.has(key)) {
