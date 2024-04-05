@@ -40,7 +40,10 @@ function setObject(key, value) {
  * 		lock: lock, {Int32Array}
  * }
  */
+let messageCount = 0;
 function onmessage(e) {
+	messageCount += 1; // 记录消息数量
+	console.log(`messageCount: ${messageCount}`);
 	const data = e.data;
 	const command = data.command;
 	e.data.count = 1;
@@ -100,17 +103,34 @@ function onmessage(e) {
 			exitSync(e.data);
 			break;
 		}
-		case 'query': {
+		case 'batch_query': {
 			let arr = e.data.arr;
 			responseWithData(arr);
 			break;
 		}
-		case 'update': {
+		case 'query': {
+			const key = e.data.key;
+			const arr = e.data.arr;
+			const obj = getObject(key);
+			serialize(obj, arr);
+			Atomics.notify(arr, 0);
+			break;
+		}
+		case 'batch_update': {
 			let changedObj = e.data.obj;
 			changedObj.forEach((value, key) => {
 				setObject(key, value);
 			});
 			let lock = e.data.lock;
+			Atomics.store(lock, 0, 1)
+			Atomics.notify(lock, 0);
+			break;
+		}
+		case 'update': {
+			let key = e.data.key;
+			let value = e.data.value;
+			let lock = e.data.lock;
+			setObject(key, value);
 			Atomics.store(lock, 0, 1)
 			Atomics.notify(lock, 0);
 			break;
@@ -387,6 +407,17 @@ function responseWithData(arr) {
 			while (Atomics.load(arr, 0) !== 0) { }
 		}
 	}
+}
+function serialize(obj, buf) {
+	const value = {
+		value: obj
+	}
+	const jsonStr = JSON.stringify(value);
+	const arr = new TextEncoder().encode(jsonStr);
+	const size = arr.byteLength;
+
+	buf[0] = size;
+	buf.set(arr, 1);
 }
 
 /**
