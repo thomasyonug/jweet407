@@ -342,6 +342,15 @@ class Comm {
 		}
 		return true;
 	}
+	// join a worker by id
+	static join(id) { 
+		this.synchronizePostMessage({ 'command': 'join', 'workerId': id });
+	}
+	// tell main thread that this worker is finish processing
+	static end() {
+		postMessage({ 'command': 'end', 'workerId': workerId });
+		Logger.info(`${workerName} task finished...`);
+	}
 }
 
 /**
@@ -442,6 +451,7 @@ self.onmessage = (event) => {
 			catch (error) {
 				Logger.error(`${workerName} error: ${error}`);
 			}
+			Comm.end();
 			break;
 		default:
 			Logger.warn('Received unknown command:' + event.data.command);

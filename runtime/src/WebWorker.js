@@ -22,10 +22,15 @@ class WebWorker {
 	start() {
 		this.init();
 		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
+		endWorkers.set(this.workerId, false);
 	}
 }
 
 const objects = new Map();
+// map: workerId -> lock array
+const endLocks = new Map();
+// map: workerId -> whether the worker has ended
+const endWorkers = new Map();
 function getObject(key) {
 	return objects.get(key);
 }
@@ -33,13 +38,6 @@ function setObject(key, value) {
 	objects.set(key, value);
 }
 
-/**
- * sync: {
- * 		command: 'sync',
- * 		key: key,
- * 		lock: lock, {Int32Array}
- * }
- */
 let messageCount = 0;
 function onmessage(e) {
 	messageCount += 1; // 记录消息数量
@@ -185,6 +183,32 @@ function onmessage(e) {
 			e.data.try = 'True';
 			applyLock(e.data);
 			break;
+		}
+		case 'join': {
+			let workerId = e.data.workerId; // wait for workerId to end
+			let lock = e.data.lock;
+			if (endWorkers.get(workerId)) {
+				Atomics.store(lock, 0, 1);
+				Atomics.notify(lock, 0);
+				return;
+			}
+			// if worker is not ended, join the lock in endLocks
+			if (!endLocks.has(workerId)) {
+				endLocks.set(workerId, []);
+			}
+			endLocks.get(workerId).push(lock);
+		}
+		case 'end': {
+			// unlock the lock in endLocks by id
+			let id = e.data.workerId; // the ending worker of id
+			endWorkers.set(id, true);
+			if (!endLocks.has(id)) {
+				return;
+			}
+			for (let lock of endLocks.get(id)) {
+				Atomics.store(lock, 0, 1);
+				Atomics.notify(lock, 0);
+			}
 		}
 	}
 }
