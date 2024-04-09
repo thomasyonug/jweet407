@@ -432,8 +432,9 @@ const java = {lang: {
             this.run()
         }
         constructor(obj) {
+			this.__key = Math.random();
             if (obj) {
-                return obj;
+                return obj;				
             }
         }
     }

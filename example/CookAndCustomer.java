@@ -5,7 +5,6 @@
  * Desk 桌子，能存放一份饭
  *
  */
-
 public class CookAndCustomer {
     public static void main(String[] args) {
         Cook cook = new Cook();
