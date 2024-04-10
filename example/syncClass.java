@@ -9,7 +9,7 @@ public class syncClass implements Runnable {
         compare(comData.m,comData.n);
     }
 
-    public  synchronized int compare(int a,int b) {
+    public  static synchronized int compare(int a,int b) {
         if(a > b){
             System.out.println("a>b");
             return 0;
