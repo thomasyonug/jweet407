@@ -409,6 +409,7 @@ let buildProxy = (target, prefix = "") => {
 			}
 			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
 				var tmp = Comm.query(key);
+				changedObjects.set(key, tmp);
 				if (tmp == null) {
 					return _target[propKey];
 				} else {
@@ -433,7 +434,7 @@ let buildProxy = (target, prefix = "") => {
 			//判断是否是volatile变量，若是，立马更新
 			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
 				console.info("Volatile update now!")
-				Comm.update(changedObjects);
+				Comm.update(key, newValue);
 			}
 			return true;
 		}
