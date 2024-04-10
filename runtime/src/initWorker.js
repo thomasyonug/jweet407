@@ -272,6 +272,11 @@ let buildProxy = (target) => {
 			mainObject.set(key,newValue)
 			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
 			if (!(newValue instanceof Object)) { changedObjects.set(key, newValue); }
+			//判断是否是volatile变量，若是，立马更新
+			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
+				console.info("Volatile update now!")
+				Comm.update(changedObjects);
+			}
 			return true;
 		}
 	});
