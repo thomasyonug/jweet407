@@ -22,10 +22,15 @@ class WebWorker {
 	start() {
 		this.init();
 		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
+		endWorkers.set(this.workerId, false);
 	}
 }
 
 const objects = new Map();
+// map: workerId -> lock array
+const endLocks = new Map();
+// map: workerId -> whether the worker has ended
+const endWorkers = new Map();
 function getObject(key) {
 	return objects.get(key);
 }
@@ -33,14 +38,10 @@ function setObject(key, value) {
 	objects.set(key, value);
 }
 
-/**
- * sync: {
- * 		command: 'sync',
- * 		key: key,
- * 		lock: lock, {Int32Array}
- * }
- */
+let messageCount = 0;
 function onmessage(e) {
+	messageCount += 1; // 记录消息数量
+	console.log(`messageCount: ${messageCount}`);
 	const data = e.data;
 	const command = data.command;
 	e.data.count = 1;
@@ -100,12 +101,20 @@ function onmessage(e) {
 			exitSync(e.data);
 			break;
 		}
-		case 'query': {
+		case 'batch_query': {
 			let arr = e.data.arr;
 			responseWithData(arr);
 			break;
 		}
-		case 'update': {
+		case 'query': {
+			const key = e.data.key;
+			const arr = e.data.arr;
+			const obj = getObject(key);
+			serialize(obj, arr);
+			Atomics.notify(arr, 0);
+			break;
+		}
+		case 'batch_update': {
 			let changedObj = e.data.obj;
 			changedObj.forEach((value, key) => {
 				setObject(key, value);
@@ -115,14 +124,244 @@ function onmessage(e) {
 			Atomics.notify(lock, 0);
 			break;
 		}
-		case 'syncRW':
-            syncRW(e.data);
-            break;        
-        case 'unsyncRW':
-            exitSyncRW(e.data);
-            break;
+		case 'update': {
+			let key = e.data.key;
+			let value = e.data.value;
+			let lock = e.data.lock;
+			setObject(key, value);
+			Atomics.store(lock, 0, 1)
+			Atomics.notify(lock, 0);
+			break;
+		}
+		case 'readLock': {
+			e.data.type = 'Read';
+			applyLock(e.data);
+			break;
+		}
+		case 'unlockRead':{
+			e.data.type = 'Read';
+			exitLock(e.data);
+			break;
+		}
+		case 'writeLock':{	
+			e.data.type = 'Write';
+			applyLock(e.data);
+			break;
+		}
+		case 'unlockWrite':{
+			e.data.type = 'Write';
+			exitLock(e.data);
+			break;
+		}
+		case 'tryOptimisticRead':{
+			e.data.type = 'OptimisticRead';
+			applyLock(e.data);
+			break;
+		}
+		case 'validate':{
+			validate(e.data);
+			break;
+		}
+		case 'tryConvertToWriteLock':{
+			e.data.type = 'Write';
+			tryConvertLock(e.data);
+			break;
+		}
+		case 'tryConvertToReadLock':{
+			e.data.type = 'Read';
+			tryConvertLock(e.data);
+			break;
+		}
+		case 'tryReadLock':{
+			e.data.type = 'Read';
+			e.data.try = 'True';
+			applyLock(e.data);
+			break;
+		}
+		case 'tryWriteLock':{
+			e.data.type = 'Write';
+			e.data.try = 'True';
+			applyLock(e.data);
+			break;
+		}
+		case 'join': {
+			let workerId = e.data.workerId; // wait for workerId to end
+			let lock = e.data.lock;
+			if (endWorkers.get(workerId)) {
+				Atomics.store(lock, 0, 1);
+				Atomics.notify(lock, 0);
+				return;
+			}
+			// if worker is not ended, join the lock in endLocks
+			if (!endLocks.has(workerId)) {
+				endLocks.set(workerId, []);
+			}
+			endLocks.get(workerId).push(lock);
+		}
+		case 'end': {
+			// unlock the lock in endLocks by id
+			let id = e.data.workerId; // the ending worker of id
+			endWorkers.set(id, true);
+			if (!endLocks.has(id)) {
+				return;
+			}
+			for (let lock of endLocks.get(id)) {
+				Atomics.store(lock, 0, 1);
+				Atomics.notify(lock, 0);
+			}
+		}
 	}
 }
+//stampedLock begin
+const keyToState = new Map();
+stampedLockBlockQueues = new Map();
+function applyLock(data){
+	if(!keyToState.has(data.key)){
+		keyToState.set(data.key,256);
+	}
+	state = keyToState.get(data.key);
+	if(data.type === 'Read'){
+		if((state&128) === 0 && (state&127) <127 ){
+			state += 1;
+			keyToState.set(data.key,state);
+			releaseStampLock(data.lock,state);
+			
+		}
+		else{
+			if(data.try === 'True'){
+				releaseStampLock(data.lock,0);
+			}else{
+				joinStampBlockQueue(data);
+			}
+		}
+	}
+	else if (data.type === 'Write'){
+		if((state&255) ==0){
+			state += 128;//设置写锁
+			keyToState.set(data.key,state);
+			releaseStampLock(data.lock,state);
+		}
+		else{
+			if(data.try === 'True'){
+				releaseStampLock(data.lock,0);
+			}else{
+				joinStampBlockQueue(data);
+			}
+		}
+	}
+	else if(data.type === 'OptimisticRead'){
+		if((state&128)===0){
+			releaseStampLock(data.lock,state>>>7 <<7);
+		}else{
+			releaseStampLock(data.lock,0);
+		}
+	}
+}
+function exitLock(data){
+	let stamp = data.stamp;
+	let key = data.key;
+	if(data.type === 'Read'){
+		if((stamp&128) === 1){
+			console.log("error: the lock is not read lock")
+			return ;
+		}
+		keyToState.set(key,keyToState.get(key)-1);
+		if((keyToState.get(key)&255) ===0){
+			dispatchStampLock(data);
+		}
+	}
+	else{
+		if((state&128) === 0){
+			console.log("error: the lock is not write lock")
+			return ;
+		}
+		keyToState.set(key,keyToState.get(key)-128); //释放写锁
+		keyToState.set(key,keyToState.get(key)+256); //版本号加1
+		
+		dispatchStampLock(data);
+	}
+}
+function validate(data){
+	let stamp = data.stamp;
+	if((keyToState.get(data.key)>>>7 <<7)=== stamp){
+		releaseStampLock(data.lock,1);
+	}else{
+		releaseStampLock(data.lock,0);
+	
+	}
+}
+function releaseStampLock(lock,state){
+	Atomics.store(lock,0,1);
+	Atomics.store(lock,1,state);
+	Atomics.notify(lock,0);
+	
+
+}
+
+function dispatchStampLock(data){
+	deleteTimeoutLock(stampedLockBlockQueues,data.key);
+	let key = data.key;
+	let set = stampedLockBlockQueues.get(key);
+	if(!set){
+		return;
+	}
+	const d = set.shift();
+	if (!d) {
+		return;
+	}
+	
+	//如果是读锁，那么将所有读锁都释放
+	if(d.type === 'Read'){
+		releaseStampLock(d.lock,keyToState.get(key)+1);
+		keyToState.set(key,keyToState.get(key)+1);
+		for(let i = set.length - 1; i >= 0; i--){
+			if(set[i].type === 'Read'){
+				releaseLock(set[i].lock,keyToState.get(key)+1);
+				keyToState.set(key,keyToState.get(key)+1);
+				set.splice(i,1);
+			}
+		}
+	}else{
+		releaseStampLock(d.lock,keyToState.get(key)+128);
+		keyToState.set(key,keyToState.get(key)+128);
+	}
+
+	
+}
+function joinStampBlockQueue(data){
+	let key = data.key;
+	if(!stampedLockBlockQueues.has(key)){
+		stampedLockBlockQueues.set(key,[]);
+	}
+	stampedLockBlockQueues.get(key).push(data);
+}
+function tryConvertLock(data){
+	let stamp = data.stamp;
+	let key = data.key;
+	let type = data.type;
+	if(type === 'Write'){
+		if((stamp&128) == 128){
+			releaseStampLock(data.lock,stamp); //本身是写锁，无需转换
+		}else if ((stamp&128) == 0 && (stamp&127) == 1){
+			releaseStampLock(data.lock,stamp+127); //转换为写锁,释放读锁
+			keyToState.set(key,stamp+127);
+
+		}else{
+			releaseStampLock(data.lock,0); //转化失败
+		}
+	}else{
+		if((stamp&128) == 128){
+			releaseStampLock(data.lock,stamp-128+256+1); //释放写锁，版本号+1，转换为读锁
+			keyToState.set(key,stamp-128+256+1);
+		}else if((stamp&128) == 0){
+			releaseStampLock(data.lock,stamp); //本身是读锁，无需转换
+		}else{
+			releaseStampLock(data.lock,0); //转化失败
+		}
+	}
+}
+
+//stampedLock end
 // 锁的阻塞队列
 const blockQueues = new Map();
 // 锁的持有者
@@ -192,6 +431,17 @@ function responseWithData(arr) {
 			while (Atomics.load(arr, 0) !== 0) { }
 		}
 	}
+}
+function serialize(obj, buf) {
+	const value = {
+		value: obj
+	}
+	const jsonStr = JSON.stringify(value);
+	const arr = new TextEncoder().encode(jsonStr);
+	const size = arr.byteLength;
+
+	buf[0] = size;
+	buf.set(arr, 1);
 }
 
 /**

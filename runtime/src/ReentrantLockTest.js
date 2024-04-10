@@ -64,7 +64,7 @@ class Cook extends WebWorker {
                                     if (Desk.food_flag === 1) {
                                         try {
                                             //Desk.lock_$LI$().wait();
-                                            Desk.condition_$LI$().await();
+                                            Desk.condition_$LI$().await(); 
                                         }
                                         catch (e) {
                                             throw Object.defineProperty(new Error(e.message), '__classes', { configurable: true, value: ['java.lang.Throwable', 'java.lang.Object', 'java.lang.RuntimeException', 'java.lang.Exception'] });
