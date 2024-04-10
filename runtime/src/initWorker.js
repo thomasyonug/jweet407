@@ -260,6 +260,14 @@ let buildProxy = (target) => {
 			if (mainObject.has(key)) {
 				return mainObject.get(key);
 			}
+			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
+				var tmp = Comm.query(key);
+				if (tmp == null) {
+					return _target[propKey];
+				} else {
+					return tmp;
+				}
+			}
 			return _target[propKey];
 		},
 		set: function (clz, propKey, newValue) {
