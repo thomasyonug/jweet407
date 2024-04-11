@@ -401,7 +401,7 @@ let buildProxy = (target, prefix = "") => {
 			let key = className + '.' + propKey;
 			//console.log("get: " + key)
 			// 如果是对象，递归创建代理
-			if (Array.isArray(_target[propKey])) {
+			if (_target[propKey] instanceof Object) {
 				return buildProxy(_target[propKey], key);
 			}
 			if (!USE_OPTIMIZE) {
@@ -508,6 +508,16 @@ const java = {lang: {
         }
     }
 
+	},
+	// java.util.concurrent.locks
+	util: {
+		concurrent: {
+			locks: {
+				ReentrantLock,
+				ReentrantReadWriteLock,
+				StampedLock
+			}
+		}
 	}
 }
 

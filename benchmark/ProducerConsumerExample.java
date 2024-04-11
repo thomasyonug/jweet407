@@ -20,7 +20,7 @@ class Buffer {
 class Producer extends Thread {
     @Override
     public void run() {
-        while (true) {
+        for (int i = 0; i < 1000; i++) {
             synchronized (Buffer.lock) {
                 while (Buffer.count == Buffer.CAPACITY) {
                     try {
@@ -40,7 +40,7 @@ class Producer extends Thread {
 class Consumer extends Thread {
     @Override
     public void run() {
-        while (true) {
+        for (int i = 0; i < 1000; i++) {
             synchronized (Buffer.lock) {
                 while (Buffer.count == 0) {
                     try {

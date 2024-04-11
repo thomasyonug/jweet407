@@ -1,6 +1,3 @@
-
-import sun.security.krb5.internal.crypto.Des;
-
 import java.util.concurrent.locks.StampedLock;
 
 public class StampedLockTest {
