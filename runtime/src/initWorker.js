@@ -490,18 +490,18 @@ class Logger {
 	}
 }
 
-const java = {
-	lang: {
-		Thread: class Thread {
-			start() {
-				this.run()
-			}
-			constructor(obj) {
-				if (obj) {
-					return obj;
-				}
-			}
-		}
+const java = {lang: {
+    Thread: class Thread {
+        start() {
+            this.run()
+        }
+        constructor(obj) {
+			this.__key = Math.random();
+            if (obj) {
+                return obj;				
+            }
+        }
+    }
 
 	}
 }

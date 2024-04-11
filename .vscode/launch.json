@@ -1,0 +1,1737 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}",
+            "args": "-i ./example -o ./output --tsout tsout "
+        },
+        {
+            "type": "java",
+            "name": "GenerateParser",
+            "request": "launch",
+            "mainClass": "org.jsweet.candyutil.parser.GenerateParser",
+            "projectName": "org.jsweet-jsweet-candy-generator-util"
+        },
+        {
+            "type": "java",
+            "name": "CandyTool",
+            "request": "launch",
+            "mainClass": "org.jsweet.CandyTool",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "GenerateSourcesTool",
+            "request": "launch",
+            "mainClass": "org.jsweet.candies.GenerateSourcesTool",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "InitProjectTool",
+            "request": "launch",
+            "mainClass": "org.jsweet.candies.InitProjectTool",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "TypescriptDef2Java",
+            "request": "launch",
+            "mainClass": "org.jsweet.input.typescriptdef.TypescriptDef2Java",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "DocFiller",
+            "request": "launch",
+            "mainClass": "org.jsweet.input.typescriptdef.visitor.DocFiller",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "org.jsweet.publisher.Main",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "DirectedGraph",
+            "request": "launch",
+            "mainClass": "org.jsweet.util.DirectedGraph",
+            "projectName": "org.jsweet-jsweet-candy-generator"
+        },
+        {
+            "type": "java",
+            "name": "NoPackageClass",
+            "request": "launch",
+            "mainClass": "NoPackageClass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "JSweetCommandLineLauncher",
+            "request": "launch",
+            "mainClass": "org.jsweet.JSweetCommandLineLauncher",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "DirectedGraph(1)",
+            "request": "launch",
+            "mainClass": "org.jsweet.transpiler.util.DirectedGraph",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GlobalsAccess",
+            "request": "launch",
+            "mainClass": "source.ambient.GlobalsAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "LibAccess",
+            "request": "launch",
+            "mainClass": "source.ambient.LibAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "LibAccessSubModule",
+            "request": "launch",
+            "mainClass": "source.ambient.LibAccessSubModule",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AccessStaticMethod",
+            "request": "launch",
+            "mainClass": "source.api.AccessStaticMethod",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ArrayBuffers",
+            "request": "launch",
+            "mainClass": "source.api.ArrayBuffers",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Booleans",
+            "request": "launch",
+            "mainClass": "source.api.Booleans",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Characters",
+            "request": "launch",
+            "mainClass": "source.api.Characters",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Dates",
+            "request": "launch",
+            "mainClass": "source.api.Dates",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Equals",
+            "request": "launch",
+            "mainClass": "source.api.Equals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExpressionBuilderTest",
+            "request": "launch",
+            "mainClass": "source.api.ExpressionBuilderTest",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExpressionBuilderTest2",
+            "request": "launch",
+            "mainClass": "source.api.ExpressionBuilderTest2",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ForeachIteration",
+            "request": "launch",
+            "mainClass": "source.api.ForeachIteration",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "J4TSInvocations",
+            "request": "launch",
+            "mainClass": "source.api.J4TSInvocations",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "JdkInvocations",
+            "request": "launch",
+            "mainClass": "source.api.JdkInvocations",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Numbers",
+            "request": "launch",
+            "mainClass": "source.api.Numbers",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Optionals",
+            "request": "launch",
+            "mainClass": "source.api.Optionals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "PrimitiveInstantiation",
+            "request": "launch",
+            "mainClass": "source.api.PrimitiveInstantiation",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "PromisesAsyncAwait",
+            "request": "launch",
+            "mainClass": "source.api.PromisesAsyncAwait",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "QualifiedInstantiation",
+            "request": "launch",
+            "mainClass": "source.api.QualifiedInstantiation",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Strings",
+            "request": "launch",
+            "mainClass": "source.api.Strings",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ThreadLocalFake",
+            "request": "launch",
+            "mainClass": "source.api.ThreadLocalFake",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "FailingAssertions",
+            "request": "launch",
+            "mainClass": "source.assertion.FailingAssertions",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "PassingAssertion",
+            "request": "launch",
+            "mainClass": "source.assertion.PassingAssertion",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Globals",
+            "request": "launch",
+            "mainClass": "source.blocksgame.Globals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Boxing",
+            "request": "launch",
+            "mainClass": "source.calculus.Boxing",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Chars",
+            "request": "launch",
+            "mainClass": "source.calculus.Chars",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Integers",
+            "request": "launch",
+            "mainClass": "source.calculus.Integers",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Longs",
+            "request": "launch",
+            "mainClass": "source.calculus.Longs",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "MathApi",
+            "request": "launch",
+            "mainClass": "source.calculus.MathApi",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Null",
+            "request": "launch",
+            "mainClass": "source.calculus.Null",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Numbers(1)",
+            "request": "launch",
+            "mainClass": "source.calculus.Numbers",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Operators",
+            "request": "launch",
+            "mainClass": "source.calculus.Operators",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Strings(1)",
+            "request": "launch",
+            "mainClass": "source.calculus.Strings",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AngularCandy",
+            "request": "launch",
+            "mainClass": "source.candies.AngularCandy",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "JQueryCandy",
+            "request": "launch",
+            "mainClass": "source.candies.JQueryCandy",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Mixins",
+            "request": "launch",
+            "mainClass": "source.candies.Mixins",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Simple",
+            "request": "launch",
+            "mainClass": "source.debug.Simple",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Globals(1)",
+            "request": "launch",
+            "mainClass": "source.decorator.Globals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "LanguageSpecifications",
+            "request": "launch",
+            "mainClass": "source.doc.LanguageSpecifications",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ComplexEnumWithAbstractMethods",
+            "request": "launch",
+            "mainClass": "source.enums.ComplexEnumWithAbstractMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ComplexEnums",
+            "request": "launch",
+            "mainClass": "source.enums.ComplexEnums",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ComplexEnumsWithInterface",
+            "request": "launch",
+            "mainClass": "source.enums.ComplexEnumsWithInterface",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "EnumWithStatics",
+            "request": "launch",
+            "mainClass": "source.enums.EnumWithStatics",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Enums",
+            "request": "launch",
+            "mainClass": "source.enums.Enums",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "EnumsImplementingInterfaces",
+            "request": "launch",
+            "mainClass": "source.enums.EnumsImplementingInterfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "EnumsReflection",
+            "request": "launch",
+            "mainClass": "source.enums.EnumsReflection",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "RemovedStringEnums",
+            "request": "launch",
+            "mainClass": "source.enums.RemovedStringEnums",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StringEnums",
+            "request": "launch",
+            "mainClass": "source.enums.StringEnums",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "SwitchWithEnumWrapper",
+            "request": "launch",
+            "mainClass": "source.enums.SwitchWithEnumWrapper",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ComplexEnumsAccess",
+            "request": "launch",
+            "mainClass": "source.enums.other.ComplexEnumsAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarbitCallerNotWorking",
+            "request": "launch",
+            "mainClass": "source.enums.samepackage.VarbitCallerNotWorking",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "A1",
+            "request": "launch",
+            "mainClass": "source.extension.A1",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AnnotationTest",
+            "request": "launch",
+            "mainClass": "source.extension.AnnotationTest",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Maps",
+            "request": "launch",
+            "mainClass": "source.extension.Maps",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "UseOfGlobalVariable",
+            "request": "launch",
+            "mainClass": "source.extension.UseOfGlobalVariable",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "BasicFunctions",
+            "request": "launch",
+            "mainClass": "source.functions.BasicFunctions",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GenericObjectStructure",
+            "request": "launch",
+            "mainClass": "source.generics.GenericObjectStructure",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InnerClassNotStatic",
+            "request": "launch",
+            "mainClass": "source.generics.InnerClassNotStatic",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InstantiationWithGenerics",
+            "request": "launch",
+            "mainClass": "source.generics.InstantiationWithGenerics",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "RawTypes",
+            "request": "launch",
+            "mainClass": "source.generics.RawTypes",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Wildcards",
+            "request": "launch",
+            "mainClass": "source.generics.Wildcards",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ArrayNew",
+            "request": "launch",
+            "mainClass": "source.init.ArrayNew",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "B",
+            "request": "launch",
+            "mainClass": "source.init.B",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "C",
+            "request": "launch",
+            "mainClass": "source.init.C",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Cloning",
+            "request": "launch",
+            "mainClass": "source.init.Cloning",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Constructor",
+            "request": "launch",
+            "mainClass": "source.init.Constructor",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ConstructorField",
+            "request": "launch",
+            "mainClass": "source.init.ConstructorField",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ConstructorMethod",
+            "request": "launch",
+            "mainClass": "source.init.ConstructorMethod",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "DependentFields",
+            "request": "launch",
+            "mainClass": "source.init.DependentFields",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "FieldDefaultValues",
+            "request": "launch",
+            "mainClass": "source.init.FieldDefaultValues",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Initializer",
+            "request": "launch",
+            "mainClass": "source.init.Initializer",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InterfaceWithSuperInterface",
+            "request": "launch",
+            "mainClass": "source.init.InterfaceWithSuperInterface",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Main(1)",
+            "request": "launch",
+            "mainClass": "source.init.Main",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "MultipleMains",
+            "request": "launch",
+            "mainClass": "source.init.MultipleMains",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ParentInstanceAccess",
+            "request": "launch",
+            "mainClass": "source.init.ParentInstanceAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StaticInitializer",
+            "request": "launch",
+            "mainClass": "source.init.StaticInitializer",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "UntypedObject",
+            "request": "launch",
+            "mainClass": "source.init.UntypedObject",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "UntypedObjectWrongUses",
+            "request": "launch",
+            "mainClass": "source.init.UntypedObjectWrongUses",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ArraysSort",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ArraysSort",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Collections",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Collections",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Dates(1)",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Dates",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ES6Maps",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ES6Maps",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ES6Sets",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ES6Sets",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Exceptions",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Exceptions",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExtendsJDK",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ExtendsJDK",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExtendsJDKAnonymous",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ExtendsJDKAnonymous",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExtendsJDKInterface",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ExtendsJDKInterface",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExtendsJDKRegular",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ExtendsJDKRegular",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Input",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Input",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Iterators",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Iterators",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Lists",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Lists",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Maps(1)",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Maps",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "NativeArrays",
+            "request": "launch",
+            "mainClass": "source.nativestructures.NativeArrays",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "NativeStringBuilder",
+            "request": "launch",
+            "mainClass": "source.nativestructures.NativeStringBuilder",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "NativeSystem",
+            "request": "launch",
+            "mainClass": "source.nativestructures.NativeSystem",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Numbers(2)",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Numbers",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ObjectMaps",
+            "request": "launch",
+            "mainClass": "source.nativestructures.ObjectMaps",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithNative",
+            "request": "launch",
+            "mainClass": "source.nativestructures.OverloadWithNative",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Properties",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Properties",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Reflect",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Reflect",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Sets",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Sets",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Strings(2)",
+            "request": "launch",
+            "mainClass": "source.nativestructures.Strings",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WeakReferences",
+            "request": "launch",
+            "mainClass": "source.nativestructures.WeakReferences",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "BasicOverride",
+            "request": "launch",
+            "mainClass": "source.overload.BasicOverride",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ConstructorOverLoadWithArray",
+            "request": "launch",
+            "mainClass": "source.overload.ConstructorOverLoadWithArray",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ConstructorOverloadFieldInitOrderWithThisCall",
+            "request": "launch",
+            "mainClass": "source.overload.ConstructorOverloadFieldInitOrderWithThisCall",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ConstructorOverloadWithFieldInitializer",
+            "request": "launch",
+            "mainClass": "source.overload.ConstructorOverloadWithFieldInitializer",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InterfaceInheritance",
+            "request": "launch",
+            "mainClass": "source.overload.InterfaceInheritance",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverLoadClassAndObject",
+            "request": "launch",
+            "mainClass": "source.overload.OverLoadClassAndObject",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverLoadVarags",
+            "request": "launch",
+            "mainClass": "source.overload.OverLoadVarags",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverLoadWithClassParam",
+            "request": "launch",
+            "mainClass": "source.overload.OverLoadWithClassParam",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Overload",
+            "request": "launch",
+            "mainClass": "source.overload.Overload",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadCaller",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadCaller",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithAbstractClass",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithAbstractClass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithEnums",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithEnums",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithFunctionalnterface",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithFunctionalnterface",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithGenerics",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithGenerics",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithInterfaces",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithInterfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithStaticAndInstanceMethods",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithStaticAndInstanceMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OverloadWithSuperclass",
+            "request": "launch",
+            "mainClass": "source.overload.OverloadWithSuperclass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverload",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverload",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadConstructor",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadConstructor",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadConstructor2",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadConstructor2",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadConstructorWithParamNameCollision",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadConstructorWithParamNameCollision",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadConstructorWithVarargs",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadConstructorWithVarargs",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadFrom2Interfaces",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadFrom2Interfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadWithArraysAndObjects",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadWithArraysAndObjects",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadWithGenerics",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadWithGenerics",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadWithInheritance",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadWithInheritance",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadWithSpecialParameters",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadWithSpecialParameters",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloads",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloads",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadsWithDefaultMethods",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadsWithDefaultMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongOverloadsWithNonCoreMethod",
+            "request": "launch",
+            "mainClass": "source.overload.WrongOverloadsWithNonCoreMethod",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AClassImplementingInterfaceWithDefaultOverloadedMethods",
+            "request": "launch",
+            "mainClass": "source.overload.default_methods.AClassImplementingInterfaceWithDefaultOverloadedMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "SubClass",
+            "request": "launch",
+            "mainClass": "source.overload.inheritance.SubClass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "BasicBeanReflection",
+            "request": "launch",
+            "mainClass": "source.reflection.BasicBeanReflection",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ClassMethods",
+            "request": "launch",
+            "mainClass": "source.reflection.ClassMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "FieldAccess",
+            "request": "launch",
+            "mainClass": "source.reflection.FieldAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GetClass",
+            "request": "launch",
+            "mainClass": "source.reflection.GetClass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "TopLevel1",
+            "request": "launch",
+            "mainClass": "source.require.TopLevel1",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InnerClassAccess",
+            "request": "launch",
+            "mainClass": "source.require.a.InnerClassAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Use1",
+            "request": "launch",
+            "mainClass": "source.require.a.Use1",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ClassImport",
+            "request": "launch",
+            "mainClass": "source.require.b.ClassImport",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GlobalsImport",
+            "request": "launch",
+            "mainClass": "source.require.b.GlobalsImport",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Globals(2)",
+            "request": "launch",
+            "mainClass": "source.root.noroot.a.Globals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Globals(3)",
+            "request": "launch",
+            "mainClass": "source.root.root.a.Globals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AccessFromClassInRoot",
+            "request": "launch",
+            "mainClass": "source.root.root2.AccessFromClassInRoot",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AnonymousClasses",
+            "request": "launch",
+            "mainClass": "source.statics.AnonymousClasses",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Classes",
+            "request": "launch",
+            "mainClass": "source.statics.Classes",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "DefaultValues",
+            "request": "launch",
+            "mainClass": "source.statics.DefaultValues",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "NestedAnonymousClassesWithParams",
+            "request": "launch",
+            "mainClass": "source.statics.NestedAnonymousClassesWithParams",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StaticInitializer(1)",
+            "request": "launch",
+            "mainClass": "source.statics.StaticInitializer",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StaticsInInterfaces",
+            "request": "launch",
+            "mainClass": "source.statics.StaticsInInterfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AnonymousClass",
+            "request": "launch",
+            "mainClass": "source.structural.AnonymousClass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AnonymousClassForLambda",
+            "request": "launch",
+            "mainClass": "source.structural.AnonymousClassForLambda",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AnonymousInInterface",
+            "request": "launch",
+            "mainClass": "source.structural.AnonymousInInterface",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AutoImportClassesInSamePackage",
+            "request": "launch",
+            "mainClass": "source.structural.AutoImportClassesInSamePackage",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ClassWithInheritedOverload",
+            "request": "launch",
+            "mainClass": "source.structural.ClassWithInheritedOverload",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "DefaultMethods",
+            "request": "launch",
+            "mainClass": "source.structural.DefaultMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "DefaultMethodsFromAbstract",
+            "request": "launch",
+            "mainClass": "source.structural.DefaultMethodsFromAbstract",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "FieldInitialization",
+            "request": "launch",
+            "mainClass": "source.structural.FieldInitialization",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "FunctionalObjects",
+            "request": "launch",
+            "mainClass": "source.structural.FunctionalObjects",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GlobalsAccess(1)",
+            "request": "launch",
+            "mainClass": "source.structural.GlobalsAccess",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Inheritance",
+            "request": "launch",
+            "mainClass": "source.structural.Inheritance",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InnerClass",
+            "request": "launch",
+            "mainClass": "source.structural.InnerClass",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InnerClass$InnerClass2",
+            "request": "launch",
+            "mainClass": "source.structural.InnerClass$InnerClass2",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InnerClassNotStatic(1)",
+            "request": "launch",
+            "mainClass": "source.structural.InnerClassNotStatic",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InstanceOf",
+            "request": "launch",
+            "mainClass": "source.structural.InstanceOf",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InstanceofForInterfaces",
+            "request": "launch",
+            "mainClass": "source.structural.InstanceofForInterfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InterfaceStaticMethods",
+            "request": "launch",
+            "mainClass": "source.structural.InterfaceStaticMethods",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "JDKInheritance",
+            "request": "launch",
+            "mainClass": "source.structural.JDKInheritance",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "LocalClasses",
+            "request": "launch",
+            "mainClass": "source.structural.LocalClasses",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Main(2)",
+            "request": "launch",
+            "mainClass": "source.structural.Main",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Name",
+            "request": "launch",
+            "mainClass": "source.structural.Name",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "NoNameClashesWithFields",
+            "request": "launch",
+            "mainClass": "source.structural.NoNameClashesWithFields",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "NoWildcardsInImports",
+            "request": "launch",
+            "mainClass": "source.structural.NoWildcardsInImports",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ObjectTypes",
+            "request": "launch",
+            "mainClass": "source.structural.ObjectTypes",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "PrivateMethodNameClashes",
+            "request": "launch",
+            "mainClass": "source.structural.PrivateMethodNameClashes",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ReplaceAnnotation",
+            "request": "launch",
+            "mainClass": "source.structural.ReplaceAnnotation",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StaticMembersInInterfaces",
+            "request": "launch",
+            "mainClass": "source.structural.StaticMembersInInterfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Transients",
+            "request": "launch",
+            "mainClass": "source.structural.Transients",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ClassUsingStaticMethod",
+            "request": "launch",
+            "mainClass": "source.structural.globalclasses.c.ClassUsingStaticMethod",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GlobalFunctionAccessFromMain",
+            "request": "launch",
+            "mainClass": "source.structural.globalclasses.d.GlobalFunctionAccessFromMain",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "DynamicInvoke",
+            "request": "launch",
+            "mainClass": "source.syntax.DynamicInvoke",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "FinalVariablesRuntime",
+            "request": "launch",
+            "mainClass": "source.syntax.FinalVariablesRuntime",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "GlobalsCastMethod",
+            "request": "launch",
+            "mainClass": "source.syntax.GlobalsCastMethod",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Keywords",
+            "request": "launch",
+            "mainClass": "source.syntax.Keywords",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Labels",
+            "request": "launch",
+            "mainClass": "source.syntax.Labels",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "LambdaExpression",
+            "request": "launch",
+            "mainClass": "source.syntax.LambdaExpression",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "LambdasWithInterfaces",
+            "request": "launch",
+            "mainClass": "source.syntax.LambdasWithInterfaces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Literals",
+            "request": "launch",
+            "mainClass": "source.syntax.Literals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Looping",
+            "request": "launch",
+            "mainClass": "source.syntax.Looping",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "QualifiedNames",
+            "request": "launch",
+            "mainClass": "source.syntax.QualifiedNames",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "References",
+            "request": "launch",
+            "mainClass": "source.syntax.References",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StatementsWithNoBlocks",
+            "request": "launch",
+            "mainClass": "source.syntax.StatementsWithNoBlocks",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "UnreachableCode",
+            "request": "launch",
+            "mainClass": "source.syntax.UnreachableCode",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ValidIndexedAccesses",
+            "request": "launch",
+            "mainClass": "source.syntax.ValidIndexedAccesses",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ExtendedThrowables",
+            "request": "launch",
+            "mainClass": "source.throwable.ExtendedThrowables",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Globals(4)",
+            "request": "launch",
+            "mainClass": "source.throwable.Globals",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "MultipleTryCatchTest",
+            "request": "launch",
+            "mainClass": "source.throwable.MultipleTryCatchTest",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Throwables",
+            "request": "launch",
+            "mainClass": "source.throwable.Throwables",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "TryCatchWrappedWithoutBraces",
+            "request": "launch",
+            "mainClass": "source.throwable.TryCatchWrappedWithoutBraces",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "CanvasDrawing",
+            "request": "launch",
+            "mainClass": "source.transpiler.CanvasDrawing",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Extended",
+            "request": "launch",
+            "mainClass": "source.transpiler.Extended",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "PrefixExtension",
+            "request": "launch",
+            "mainClass": "source.transpiler.PrefixExtension",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "AbstractClasses",
+            "request": "launch",
+            "mainClass": "source.tscomparison.AbstractClasses",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ActualScoping",
+            "request": "launch",
+            "mainClass": "source.tscomparison.ActualScoping",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "CompileTimeWarnings",
+            "request": "launch",
+            "mainClass": "source.tscomparison.CompileTimeWarnings",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "OtherThisExample",
+            "request": "launch",
+            "mainClass": "source.tscomparison.OtherThisExample",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "SaferVarargs",
+            "request": "launch",
+            "mainClass": "source.tscomparison.SaferVarargs",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "StrongerTyping",
+            "request": "launch",
+            "mainClass": "source.tscomparison.StrongerTyping",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "ThisIsThis",
+            "request": "launch",
+            "mainClass": "source.tscomparison.ThisIsThis",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "CastConversions",
+            "request": "launch",
+            "mainClass": "source.typing.CastConversions",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "CustomLambdas",
+            "request": "launch",
+            "mainClass": "source.typing.CustomLambdas",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "CustomStringTypes",
+            "request": "launch",
+            "mainClass": "source.typing.CustomStringTypes",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "InvalidIndexedAccesses",
+            "request": "launch",
+            "mainClass": "source.typing.InvalidIndexedAccesses",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Lambdas",
+            "request": "launch",
+            "mainClass": "source.typing.Lambdas",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "MixinsWithDefs",
+            "request": "launch",
+            "mainClass": "source.typing.MixinsWithDefs",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "MixinsWithDefsAndOtherName",
+            "request": "launch",
+            "mainClass": "source.typing.MixinsWithDefsAndOtherName",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Tuples",
+            "request": "launch",
+            "mainClass": "source.typing.Tuples",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "Unions",
+            "request": "launch",
+            "mainClass": "source.typing.Unions",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "WrongUnions",
+            "request": "launch",
+            "mainClass": "source.typing.WrongUnions",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "MixinsWithAmbient",
+            "request": "launch",
+            "mainClass": "source.typing.root.MixinsWithAmbient",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsAndOverloads",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsAndOverloads",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsCalledWithArray",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsCalledWithArray",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsCalledWithArray2",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsCalledWithArray2",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsCalledWithoutArray",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsCalledWithoutArray",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOfArrays",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOfArrays",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOnAnonymous",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOnAnonymous",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOnApi",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOnApi",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOnField",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOnField",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOnGetter",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOnGetter",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOnNew",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOnNew",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsOnStaticMethod",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsOnStaticMethod",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        },
+        {
+            "type": "java",
+            "name": "VarargsTransmission",
+            "request": "launch",
+            "mainClass": "source.varargs.VarargsTransmission",
+            "projectName": "org.jsweet-jsweet-transpiler"
+        }
+    ]
+}
