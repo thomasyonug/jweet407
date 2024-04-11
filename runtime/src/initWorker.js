@@ -508,6 +508,9 @@ const java = {
                     return obj;
                 }
             }
+            join() {
+                Comm.join(this.workerId)
+            }
         }
 	},
 	// java.util.concurrent.locks
