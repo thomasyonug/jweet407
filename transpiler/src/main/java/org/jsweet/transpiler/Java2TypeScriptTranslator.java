@@ -1486,20 +1486,29 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             // 407TODO: check if this class a parallel class, and inject the captured cross
             //          thread variable for sharedArrayBuffer.
             Set<String> cvs = context.cvsAnalyzer.getCvs(classTree);
-            StringBuilder obj = new StringBuilder("{");
-            for (var cv : cvs) {
-                // var cvname = cv.toString();
-                obj.append(String.format("'%s':%s,", cv, cv));
-            }
-            obj.append("}");
-            var captured = "public __captured_cvs : any = " + obj;
-
-
-            var code = String.format("class %s extends WebWorker{\n%s\n",
+            if (cvs != null) {
+                StringBuilder obj = new StringBuilder("{");
+                for (var cv : cvs) {
+                    // var cvname = cv.toString();
+                    obj.append(String.format("'%s':%s,", cv, cv));
+                }
+                obj.append("}");
+                var captured = "public __captured_cvs : any = " + obj + ";\n";
+                var code = String.format("class %s extends WebWorker{\n%s\n",
                     classTree.getSimpleName().toString(),
                     captured
-            );
-            print(code);
+                );
+                print(code);
+            } else {
+                var captured = "public __captured_cvs : any = {};\n";
+                var code = String.format("class %s extends WebWorker{\n%s\n",
+                    classTree.getSimpleName().toString(),
+                    captured
+                );
+                print(code);
+            }
+
+
 
             enterScope();
 //            var main = getScope().getMainMethod();
@@ -1557,7 +1566,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         enterScope();
         getScope().name = name;
-
+        
         ClassTree parent = getParent(ClassTree.class);
         List<TypeParameterElement> parentTypeVars = new ArrayList<>();
         if (parent != null) {
@@ -1818,6 +1827,23 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             print(" {").println().startIndent();
         }
 
+        if (context.util.is_containVolatileField(classTree)) {
+            // 407TODO: check if this class contains volatile var.
+            Set<String> volatileCvs = context.cvsAnalyzer.getVolatileCvs(classTree);
+            if (volatileCvs != null) {
+                StringBuilder obj = new StringBuilder("{");
+                for (var cv : volatileCvs) {
+                    // var cvname = cv.toString();
+                    obj.append(String.format("'%s':'%s',", cv, cv));
+                }
+                obj.deleteCharAt(obj.length()-1);
+                obj.append("}");
+                var captured = "\n\tpublic static __captured_volatile_cvs : any = " + obj + ";\n";
+    
+                print(captured).println();
+            }
+        }
+
 
 
         getAdapter().beforeTypeBody(classTypeElement);
@@ -1826,13 +1852,16 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
         //          thread variable for sharedArrayBuffer.
         if (Util.is_parallel(classTree)) {
             Set<String> cvs = context.cvsAnalyzer.getCvs(classTree);
-            StringBuilder obj = new StringBuilder("{");
-            for (var cv : cvs) {
-                // var cvname = cv.toString();
-                obj.append(String.format("'%s':%s,", cv, cv));
+            if(cvs != null) {
+                StringBuilder obj = new StringBuilder("{");
+                for (var cv : cvs) {
+                    // var cvname = cv.toString();
+                    obj.append(String.format("'%s':%s,", cv, cv));
+                }
+                obj.append("}");
+                printIndent().print("public __captured_cvs : any = " + obj + ";\n");
             }
-            obj.append("}");
-            printIndent().print("public __captured_cvs : any = " + obj + ";\n");
+
         }
 
         if (getScope().innerClassNotStatic && !getScope().interfaceScope && !getScope().enumScope
