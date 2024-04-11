@@ -495,7 +495,12 @@ const java = {lang: {
         start() {
             this.run()
         }
-        constructor(obj) {
+			static sleep(timeOut) {
+				const start = Date.now();
+				const end = start + timeOut;
+				while (Date.now() < end) { }
+			}
+      constructor(obj) {
 			this.__key = Math.random();
             if (obj) {
                 return obj;				
