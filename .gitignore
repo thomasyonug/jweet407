@@ -18,3 +18,9 @@ package-lock.json
 .vscode/settings.json
 runtime/.idea/TSWorkerKit.iml
 runtime/test/Cook.js
+
+
+/tsout
+/output
+.vscode/
+.idea/
