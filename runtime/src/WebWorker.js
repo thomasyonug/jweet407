@@ -22,7 +22,7 @@ class WebWorker {
 	start() {
 		this.init();
 		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
-		endWorkers.set(this.workerId, false);
+		endWorkers.set(this.workerId.toString(), false);
 	}
 }
 
@@ -41,7 +41,6 @@ function setObject(key, value) {
 let messageCount = 0;
 function onmessage(e) {
 	messageCount += 1; // 记录消息数量
-	console.log(`messageCount: ${messageCount}`);
 	const data = e.data;
 	const command = data.command;
 	e.data.count = 1;
@@ -202,13 +201,20 @@ function onmessage(e) {
 			// unlock the lock in endLocks by id
 			let id = e.data.workerId; // the ending worker of id
 			endWorkers.set(id, true);
-			if (!endLocks.has(id)) {
-				return;
+			if (endLocks.has(id)) {
+				for (let lock of endLocks.get(id)) {
+					Atomics.store(lock, 0, 1);
+					Atomics.notify(lock, 0);
+				}
 			}
-			for (let lock of endLocks.get(id)) {
-				Atomics.store(lock, 0, 1);
-				Atomics.notify(lock, 0);
+
+			// if all workers are ended, print the messageCount
+			for (let [key, value] of endWorkers) {
+				if (!value) {
+					return;
+				}
 			}
+			console.log('messageCount: ' + messageCount);
 		}
 	}
 }
