@@ -213,6 +213,7 @@ function onmessage(e) {
 	}
 }
 //stampedLock begin
+//state  
 const keyToState = new Map();
 stampedLockBlockQueues = new Map();
 function applyLock(data){
@@ -514,8 +515,9 @@ function exitSync(data) {
 			if(!first){
 				return;
 			}
-			releaseLock(first.lock);
 			lockHolders.set(key, first);
+			releaseLock(first.lock);
+			
 			//如果阻塞队列第一个是申请读锁，那么将所有读都释放
 			if(first.type === 'Read'){
 				//从后向前遍历，释放所有读锁
@@ -536,6 +538,7 @@ function exitSync(data) {
  * 释放锁，加入等待队列
  */
 function wait(data) {
+	console.log(data.workerId+"wait")
 	let key = data.key;
 	data.count = lockHolders.get(key).count; // 记录锁计数器
 	joinWaitingQueue(key, data);
@@ -579,10 +582,19 @@ function notify(data) {
 	}
 }
 function notifyAll(data) {
+	console.log(data.workerId+"notifyAll")
+	console.log(blockQueues);
+	console.log(waitingQueues);
+	console.log(lockHolders);
+	console.log(lockHolders.get(data.key));
 	let key = data.key;
 	if (waitingQueues.has(key)) {
 		let set = waitingQueues.get(key);
+		
 		if (set) {
+			
+
+			waitingQueues.delete(key);
 			if (!blockQueues.has(key)) {
 				blockQueues.set(key, []);
 			}

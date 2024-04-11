@@ -40,7 +40,6 @@ class lock {
 		postMessage({ 'command': 'unsync', 'key': this.__key, "workerId": workerId });
 	}
 	tryLock(time, timeUnit) {
-
 		if (arguments.length == 0) {
 			if (Comm.synchronizePostMessageWithReturn({ 'command': 'tryLock', 'key': this.__key, "workerId": workerId })) {
 				Comm.batch_query();
@@ -51,7 +50,7 @@ class lock {
 		}
 		else {
 			let waitTime = time * timeUnit;
-			//console.log(waitTime);
+			
 			const lock = createLock();
 			postMessage({ 'command': 'sync', 'key': this.__key, 'lock': lock, "workerId": workerId });
 			if (Atomics.wait(lock, 0, 0, waitTime) === "timed-out") {
@@ -70,6 +69,19 @@ class lock {
 }
 class ReentrantLock extends lock {
 
+}
+
+class Condition {
+	await() {
+		Comm.batch_update(changedObjects);
+		Comm.synchronizePostMessage({ 'command': 'await', 'key': this.__key, 'lockName': this.__lockName, "workerId": workerId });
+	}
+	signal() {
+		postMessage({ 'command': 'signal', 'key': this.__key, 'lockName': this.__lockName, "workerId": workerId });
+	}
+	signalAll() {
+		postMessage({ 'command': 'signalAll', 'key': this.__key, 'lockName': this.__lockName, "workerId": workerId });
+	}
 }
 class readLock extends lock {
 	lock() {
@@ -157,18 +169,7 @@ class ReentrantReadWriteLock {
 		return this.wLock;
 	}
 }
-class Condition {
-	await() {
-		Comm.batch_update(changedObjects);
-		Comm.synchronizePostMessage({ 'command': 'await', 'key': this.__key, 'lockName': this.__lockName, "workerId": workerId });
-	}
-	signal() {
-		postMessage({ 'command': 'signal', 'key': this.__key, 'lockName': this.__lockName, "workerId": workerId });
-	}
-	signalAll() {
-		postMessage({ 'command': 'signalAll', 'key': this.__key, 'lockName': this.__lockName, "workerId": workerId });
-	}
-}
+
 class StampedLock {
 	readLock() {
 		let l = this.syncPostMessage({ 'command': 'readLock', 'key': this.__key, "workerId": workerId });
@@ -277,10 +278,13 @@ class Comm {
 		}
 		const key = obj.__key;
 		this.synchronizePostMessage({ 'command': 'wait', 'key': key, "workerId": workerId });
+		if (USE_OPTIMIZE) {
+			Comm.batch_query();
+		}
 	}
 	static notify(obj) {
 		const key = obj.__key;
-		postMessage({ 'command': 'notify', 'key': key, "workerId": workerId });
+		postMessage({ 'command': 'notifyAll', 'key': key, "workerId": workerId });
 	}
 	static update(key, value) {
 		const lock = createLock();
@@ -337,7 +341,7 @@ class Comm {
 		postMessage({ ...message, lock });
 		Atomics.wait(lock, 0, 0);
 		if (Atomics.load(lock, 0) === 2) {
-			console.log(3);
+			
 			return false;
 		}
 		return true;
