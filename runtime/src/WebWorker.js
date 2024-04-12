@@ -589,10 +589,10 @@ function notify(data) {
 }
 function notifyAll(data) {
 	console.log(data.workerId+"notifyAll")
-	console.log(blockQueues);
-	console.log(waitingQueues);
-	console.log(lockHolders);
-	console.log(lockHolders.get(data.key));
+	// console.log(blockQueues);
+	// console.log(waitingQueues);
+	// console.log(lockHolders);
+	// console.log(lockHolders.get(data.key));
 	let key = data.key;
 	if (waitingQueues.has(key)) {
 		let set = waitingQueues.get(key);
