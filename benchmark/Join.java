@@ -24,6 +24,7 @@ public class Join extends Thread {
     public void run() {
         while (true) {
             synchronized (Scope.lock) {
+                System.out.println("join start lock");
                 if (Scope.t1 != null) {
                     System.out.println("join start run");
                     try {

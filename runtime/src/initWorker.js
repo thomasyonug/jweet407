@@ -507,6 +507,7 @@ const java = {
                 if (obj) {
                     return obj;
                 }
+                this.workerId = workerId
             }
             join() {
                 Comm.join(this.workerId)
