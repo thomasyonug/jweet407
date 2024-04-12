@@ -4,6 +4,7 @@ import org.jsweet.transpiler.util.Util;
 
 import standalone.com.sun.source.tree.*;
 import standalone.com.sun.source.util.Trees;
+import standalone.com.sun.tools.javac.tree.JCTree.JCNewClass;
 import standalone.com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -22,6 +23,7 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
     private Stack<Set<String>> clzScope; // 存储类的作用域
     private Set<String> currentOutScope; // 当前类之外的作用域
     private HashMap<ClassTree, Set<String>> cvsScope; // 存储类与其交叉变量的映射
+    private HashMap<String, Set<String>> classToCvsScope;; // 存储类与其交叉变量的映射
     private HashMap<ClassTree, Set<String>> volatileCvsScope; // 存储类与其volatile变量的映射
     private static final Set<String> JAVA_KEYWORDS = new HashSet<>();
 
@@ -62,9 +64,9 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
      *
      * @param var JCVariableDecl对象
      */
-    private void addVar(JCVariableDecl var) {
-        clzScope.lastElement().add(var.getName().toString());
-    }
+    // private void addVar(JCVariableDecl var) {
+    //     clzScope.lastElement().add(var.getName().toString());
+    // }
 
     /**
      * 将变量名称添加到当前作用域。
@@ -87,22 +89,22 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
      * @param name 待检查的变量名称
      * @return 变量是否存在
      */
-    private boolean exist(Name name) {
-        if (isKeyword(name)) {
-            return true;
-        }
-        if (currentOutScope.contains(name)) {
-            return true;
-        }
-        for (var names : clzScope) {
-            for (var n : names) {
-                if (n.equals(name)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    // private boolean exist(Name name) {
+    //     if (isKeyword(name)) {
+    //         return true;
+    //     }
+    //     if (currentOutScope.contains(name)) {
+    //         return true;
+    //     }
+    //     for (var names : clzScope) {
+    //         for (var n : names) {
+    //             if (n.equals(name)) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
     /**
      * 检查给定类是否包含交叉变量。
@@ -127,13 +129,13 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
      * @param name 待检查的变量名称
      * @return 是否是关键字
      */
-    private boolean isKeyword(Name name) {
-        var nameStr = name.toString();
-        if (JAVA_KEYWORDS.contains(nameStr)) {
-            return true;
-        }
-        return false;
-    }
+    // private boolean isKeyword(Name name) {
+    //     var nameStr = name.toString();
+    //     if (JAVA_KEYWORDS.contains(nameStr)) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
     /**
      * 创建一个默认的交叉变量分析器，仅分析局部变量。
@@ -141,6 +143,7 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
     public CvsAnalyzer() {
         clzScope = new Stack<>();
         cvsScope = new HashMap<>();
+        classToCvsScope = new HashMap<>();
         volatileCvsScope = new HashMap<>();
     }
 
@@ -159,19 +162,28 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
         // 判断是否继承Thread类
         if (!Util.is_parallel(node)) {
             // return super.visitClass(node, trees);
-            exitScope();
             var members = node.getMembers();
             for (var member : members) {
                 if (member instanceof JCVariableDecl) {
                     JCVariableDecl variableDecl = (JCVariableDecl) member;
                     if (variableDecl.getModifiers().getFlags().contains(Modifier.VOLATILE)) {
-                        // 如果是静态变量，则记录到当前类的作用域
+                        // 如果是Volatile变量，则记录到当前类的作用域
                         Set<String> volatileCvs = volatileCvsScope.getOrDefault(node, new HashSet<String>());
                         volatileCvs.add(variableDecl.getName().toString());
                         volatileCvsScope.put(node, volatileCvs);
                     }
+                    if (variableDecl.getModifiers().getFlags().contains(Modifier.STATIC)) {
+                        if(variableDecl.getInitializer() instanceof JCNewClass) {
+                            String tmpClass = variableDecl.getInitializer().type.toString();
+                            Set<String> tmpCvs = classToCvsScope.getOrDefault(node.getSimpleName().toString(), new HashSet<String>());
+                            tmpCvs.add(tmpClass);
+                            classToCvsScope.put(node.getSimpleName().toString(), tmpCvs);
+                        }
+                    }
+
                 }
             }
+            exitScope();
             return null;
         }
         var members = node.getMembers();
@@ -180,6 +192,12 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
                 JCVariableDecl variableDecl = (JCVariableDecl) member;
                 if (variableDecl.getModifiers().getFlags().contains(Modifier.STATIC)) {
                     // 如果是静态变量，则记录到当前类的作用域
+                    if(variableDecl.getInitializer() instanceof JCNewClass) {
+                        String tmpClass = variableDecl.getInitializer().type.toString();
+                        Set<String> tmpCvs = classToCvsScope.getOrDefault(node.getSimpleName().toString(), new HashSet<String>());
+                        tmpCvs.add(tmpClass);
+                        classToCvsScope.put(node.getSimpleName().toString(), tmpCvs);
+                    }
                     addVar(node.getSimpleName().toString()+"."+variableDecl.getName().toString());
                     currentOutScope.add(node.getSimpleName().toString()+"."+variableDecl.getName().toString());
                 }
@@ -260,8 +278,12 @@ public class CvsAnalyzer extends TreePathScanner<Void, Trees> {
                 VariableElement variableElement = (VariableElement) element;
                 if (variableElement.getModifiers().contains(Modifier.STATIC)) {
                     // 记录引用的静态变量
+                    String className = variableElement.getEnclosingElement().getSimpleName().toString();
                     addVar(node.toString());
                     currentOutScope.add(node.toString());
+                    if (classToCvsScope.containsKey(className)) {
+                        currentOutScope.addAll(classToCvsScope.get(className));
+                    }
                 }
             }
         }

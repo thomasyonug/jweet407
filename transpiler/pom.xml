@@ -46,7 +46,7 @@
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version.release>16</java.version.release>
+		<java.version.release>17</java.version.release>
 		<java.version>1.${java.version.release}</java.version>
 	</properties>
 	<repositories>

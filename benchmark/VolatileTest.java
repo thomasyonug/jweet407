@@ -1,23 +1,22 @@
 class Data {
     public volatile static  boolean  stop = false;
+    public static Thread cntThread;
 }
 
 public class VolatileTest{
-    public static void main(String args[]) throws InterruptedException {
+    public static void main(String args[]){
         TestThread testThread = new TestThread();
         testThread.start();
-        Thread.sleep(100);
         TestThread2 testThread2 = new TestThread2();
         testThread2.start();
         System.out.println("now, in main thread stop is: " + Data.stop);
-        testThread.join();
-        testThread2.join();
     }
 }
 
 class TestThread extends Thread {
     @Override
     public void run() {
+        Data.cntThread = this;
         int i = 1;
         while (!Data.stop) {
             i++;
@@ -29,7 +28,20 @@ class TestThread extends Thread {
 class TestThread2 extends Thread {
     @Override
     public void run() {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         Data.stop = true;
         System.out.println("Thread2 update stop to: " + Data.stop);
+        if (Data.cntThread!= null) {
+            System.out.println("Thread2 waiting for Thread1 to stop");
+            try {
+                Data.cntThread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
