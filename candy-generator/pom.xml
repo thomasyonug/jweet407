@@ -114,8 +114,16 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
 
-		</plugins>
+        </plugins>
 		<pluginManagement>
 			<plugins>
                 <!--This plugin's configuration is used to store Eclipse m2e settings 

@@ -504,6 +504,10 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
     private boolean isDefinitionScope = false;
 
     private boolean isSynchronizedBlock = false;
+    private boolean isSynchronizedClass = false;
+    private boolean isSynchronizedFunc = false;
+    private String syncClassname = "";
+
     private ExpressionTree unSyncLock = null;
 
     protected final boolean isTopLevelScope() {
@@ -1486,29 +1490,21 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             // 407TODO: check if this class a parallel class, and inject the captured cross
             //          thread variable for sharedArrayBuffer.
             Set<String> cvs = context.cvsAnalyzer.getCvs(classTree);
-            if (cvs != null) {
-                StringBuilder obj = new StringBuilder("{");
-                for (var cv : cvs) {
-                    // var cvname = cv.toString();
-                    obj.append(String.format("'%s':%s,", cv, cv));
-                }
-                obj.append("}");
-                var captured = "public __captured_cvs : any = " + obj + ";\n";
-                var code = String.format("class %s extends WebWorker{\n%s\n",
-                    classTree.getSimpleName().toString(),
-                    captured
-                );
-                print(code);
-            } else {
-                var captured = "public __captured_cvs : any = {};\n";
-                var code = String.format("class %s extends WebWorker{\n%s\n",
-                    classTree.getSimpleName().toString(),
-                    captured
-                );
-                print(code);
+            StringBuilder obj = new StringBuilder("{");
+            for (var cv : cvs) {
+                // var cvname = cv.toString();
+                obj.append(String.format("'%s':%s,", cv, cv));
             }
+            obj.append("}");
+            var captured = "public __captured_cvs : any = " + obj + ";\n";
+            var classlock = "static class= {__key : \"" + classTree.getSimpleName().toString() + "\"}" + ";\n";
 
-
+            var code = String.format("class %s extends WebWorker{\n%s\n%s\n",
+                    classTree.getSimpleName().toString(),
+                    captured,
+                    classlock
+            );
+            print(code);
 
             enterScope();
 //            var main = getScope().getMainMethod();
@@ -1839,8 +1835,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 obj.deleteCharAt(obj.length()-1);
                 obj.append("}");
                 var captured = "\n\tpublic static __captured_volatile_cvs : any = " + obj + ";\n";
-    
+                var classlock = "\n\tstatic class= {__key : \"" + classTree.getSimpleName().toString() + "\"}" + ";\n"; 
                 print(captured).println();
+                print(classlock).println();
             }
         }
 
@@ -1860,8 +1857,8 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 }
                 obj.append("}");
                 printIndent().print("public __captured_cvs : any = " + obj + ";\n");
+                printIndent().print("static class= {__key : \"" + classTree.getSimpleName().toString() + "\"}" + ";\n");
             }
-
         }
 
         if (getScope().innerClassNotStatic && !getScope().interfaceScope && !getScope().enumScope
@@ -2509,6 +2506,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
     public Void visitMethod(final MethodTree methodTree, final Trees trees) {
         ExecutableElement methodElement = Util.getElement(methodTree);
 
+
         if (getAdapter().substituteExecutable(methodElement)) {
             return returnNothing();
         }
@@ -2520,6 +2518,10 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
         final ClassTree parent = (ClassTree) getParent();
         TypeElement parentElement = Util.getElement(parent);
+
+        if (methodElement.getModifiers().contains(Modifier.STATIC) && methodElement.getModifiers().contains(Modifier.SYNCHRONIZED)){
+            syncClassname = parent.getSimpleName().toString();
+        }
 
         if (!getScope().enumWrapperClassScope //
                 && parent != null //
@@ -2633,11 +2635,40 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             print("): ");
             substituteAndPrintType(methodTree.getReturnType());
             print(" {").println();
-            startIndent().printIndent();
-
+            startIndent();
+            if (methodElement.getModifiers().contains(Modifier.SYNCHRONIZED)){
+                if(methodElement.getModifiers().contains(Modifier.STATIC)){
+                    printIndent();
+                    print("Comm.sync(");
+                    print(parent.getSimpleName().toString());
+                    print(".class);"+'\n');
+                    isSynchronizedClass = true;
+                }
+                else{
+                    printIndent();
+                    print("Comm.sync(");
+                    print("this);"+'\n');
+                    isSynchronizedFunc = true;
+                }
+            }
             if (!util().isVoidType(methodElement.getReturnType())) {
+                if (methodElement.getModifiers().contains(Modifier.SYNCHRONIZED)){
+                    if(methodElement.getModifiers().contains(Modifier.STATIC)){
+                        printIndent();
+                        print("Comm.unsync(");
+                        print(parent.getSimpleName().toString());
+                        print(".class);"+'\n');                        
+                    }
+                    else{
+                        printIndent();
+                        print("Comm.unsync(");
+                        print("this);"+'\n');
+                    }
+                }
+                printIndent();
                 print("return ");
             }
+            printIndent();
             print("__debug_exec('" + (parentElement == null ? "null" : parentElement.getQualifiedName()) + "', '"
                     + methodTree.getName() + "', ");
             if (!methodTree.getParameters().isEmpty()) {
@@ -2665,6 +2696,21 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 removeLastChars(2);
             }
             print("));");
+            if (methodElement.getModifiers().contains(Modifier.SYNCHRONIZED)){
+                if(methodElement.getModifiers().contains(Modifier.STATIC)){
+                    printIndent();
+                    print("Comm.unsync(");
+                    print(parent.getSimpleName().toString());
+                    print(".class);"+'\n');
+                    isSynchronizedClass = false;
+                }
+                else{
+                    printIndent();
+                    print("Comm.unsync(");
+                    print("this);"+'\n');
+                    isSynchronizedFunc = false;
+                }   
+            }        
             println().endIndent().printIndent();
             print("}").println().println().printIndent();
         }
@@ -2880,7 +2926,21 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                     endIndent().println().printIndent().print("}");
                 } else {
                     print(" ").print("{").println().startIndent();
-
+                    if (methodElement.getModifiers().contains(Modifier.SYNCHRONIZED)){
+                        if(methodElement.getModifiers().contains(Modifier.STATIC)){
+                            printIndent();
+                            print("Comm.sync(");
+                            print(parent.getSimpleName().toString());
+                            print(".class);"+'\n');
+                            isSynchronizedClass = true;
+                        }
+                        else{
+                            printIndent();
+                            print("Comm.sync(");
+                            print("this);"+'\n');
+                            isSynchronizedFunc = true;
+                        }   
+                    } 
                     if (!getAdapter().substituteMethodBody(parentElement, methodElement)) {
 
                         String replacedBody = null;
@@ -2942,6 +3002,21 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                             printIndent().print(replacedBody).println();
                         }
 
+                    }
+                    if (methodElement.getModifiers().contains(Modifier.SYNCHRONIZED)){
+                        if(methodElement.getModifiers().contains(Modifier.STATIC)){
+                            printIndent();
+                            print("Comm.unsync(");
+                            print(parent.getSimpleName().toString());
+                            print(".class);"+'\n');
+                            isSynchronizedClass = false;
+                        }
+                        else{
+                            printIndent();
+                            print("Comm.unsync(");
+                            print("this);"+'\n');
+                            isSynchronizedFunc = false;
+                        }   
                     }
                     endIndent().printIndent().print("}");
                 }
@@ -5809,6 +5884,17 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             print(unSyncLock);
             print(");");
         }
+        if(isSynchronizedClass){           
+            print("Comm.unsync(");
+            print(syncClassname);
+            print(".class);"+'\n');
+        }
+        if(isSynchronizedFunc){           
+            print("Comm.unsync(");
+            print("this");
+            print(");"+'\n');
+        }       
+
         print("return");
         if (returnStatement.getExpression() != null) {
             Tree parentFunction = getFirstParent(MethodTree.class, LambdaExpressionTree.class);

@@ -22,7 +22,7 @@ class WebWorker {
 	start() {
 		this.init();
 		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
-		endWorkers.set(this.workerId, false);
+		endWorkers.set(this.workerId.toString(), false);
 	}
 }
 
@@ -41,7 +41,6 @@ function setObject(key, value) {
 let messageCount = 0;
 function onmessage(e) {
 	messageCount += 1; // 记录消息数量
-	console.log(`messageCount: ${messageCount}`);
 	const data = e.data;
 	const command = data.command;
 	e.data.count = 1;
@@ -202,17 +201,25 @@ function onmessage(e) {
 			// unlock the lock in endLocks by id
 			let id = e.data.workerId; // the ending worker of id
 			endWorkers.set(id, true);
-			if (!endLocks.has(id)) {
-				return;
+			if (endLocks.has(id)) {
+				for (let lock of endLocks.get(id)) {
+					Atomics.store(lock, 0, 1);
+					Atomics.notify(lock, 0);
+				}
 			}
-			for (let lock of endLocks.get(id)) {
-				Atomics.store(lock, 0, 1);
-				Atomics.notify(lock, 0);
+
+			// if all workers are ended, print the messageCount
+			for (let [key, value] of endWorkers) {
+				if (!value) {
+					return;
+				}
 			}
+			console.log('messageCount: ' + messageCount);
 		}
 	}
 }
 //stampedLock begin
+//state  
 const keyToState = new Map();
 stampedLockBlockQueues = new Map();
 function applyLock(data){
@@ -514,8 +521,9 @@ function exitSync(data) {
 			if(!first){
 				return;
 			}
-			releaseLock(first.lock);
 			lockHolders.set(key, first);
+			releaseLock(first.lock);
+			
 			//如果阻塞队列第一个是申请读锁，那么将所有读都释放
 			if(first.type === 'Read'){
 				//从后向前遍历，释放所有读锁
@@ -536,6 +544,7 @@ function exitSync(data) {
  * 释放锁，加入等待队列
  */
 function wait(data) {
+	console.log(data.workerId+"wait")
 	let key = data.key;
 	data.count = lockHolders.get(key).count; // 记录锁计数器
 	joinWaitingQueue(key, data);
@@ -579,10 +588,19 @@ function notify(data) {
 	}
 }
 function notifyAll(data) {
+	console.log(data.workerId+"notifyAll")
+	// console.log(blockQueues);
+	// console.log(waitingQueues);
+	// console.log(lockHolders);
+	// console.log(lockHolders.get(data.key));
 	let key = data.key;
 	if (waitingQueues.has(key)) {
 		let set = waitingQueues.get(key);
+		
 		if (set) {
+			
+
+			waitingQueues.delete(key);
 			if (!blockQueues.has(key)) {
 				blockQueues.set(key, []);
 			}
@@ -610,6 +628,7 @@ function signalAll(data){
 	let condition = data.key;
 	if(conditionWaitingQueue.has(condition)){
 		let lockToData = conditionWaitingQueue.get(condition);
+		conditionWaitingQueue.delete(condition);
 		lockToData.forEach((dataList,lockName) => {
 			dataList.forEach(d => {
 				joinBlockQueue(lockName,d);
@@ -678,16 +697,19 @@ function buildProxy(obj) {
 }
 
 
-const java = {lang: {
-    Thread: class Thread {
-        start() {
-            this.run()
-        }
-        constructor(obj) {
-            if (obj) {
-                return obj;
+const java = {
+    lang: {
+        Thread: class Thread {
+            start() {
+                this.run()
+            }
+            constructor(obj) {
+                if (obj) {
+                    let worker = new WebWorker();
+                    worker.source = obj.source;
+                    return worker;
+                }
             }
         }
     }
-
-}}
+}
