@@ -14,12 +14,13 @@ public class CookAndCustomerWithObject {
     }
 }
 
+class Food {
+    public int food_flag = 0;
+    public int count = 10;
+}
+
 class Desk {
-	public static Food food = new Food(); //桌子上的食物
-	static class Food {
-		public int food_flag = 0;
-		public int count = 10;
-	}
+    public static Food food = new Food(); //桌子上的食物
     public static Object lock = new Object(); //锁
 }
 
