@@ -628,6 +628,7 @@ function signalAll(data){
 	let condition = data.key;
 	if(conditionWaitingQueue.has(condition)){
 		let lockToData = conditionWaitingQueue.get(condition);
+		conditionWaitingQueue.delete(condition);
 		lockToData.forEach((dataList,lockName) => {
 			dataList.forEach(d => {
 				joinBlockQueue(lockName,d);
