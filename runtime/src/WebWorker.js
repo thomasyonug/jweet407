@@ -200,6 +200,7 @@ function onmessage(e) {
 				endLocks.set(workerId, []);
 			}
 			endLocks.get(workerId).push(lock);
+			break;
 		}
 		case 'end': {
 			// unlock the lock in endLocks by id
@@ -219,6 +220,7 @@ function onmessage(e) {
 				}
 			}
 			console.log('messageCount: ' + messageCount);
+			break;
 		}
 	}
 }

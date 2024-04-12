@@ -295,7 +295,7 @@ class Comm {
 	static batch_update(changedObjs) {
 		if (!changedObjs || changedObjs.size === 0) return;
 		Logger.info('子线程一次性set:');
-		//Logger.info(changedObj);
+		Logger.info(changedObjects);
 		this.synchronizePostMessage({ 'command': 'batch_update', 'obj': changedObjs });
 		changedObjs.clear();
 	}
@@ -349,10 +349,13 @@ class Comm {
 	}
 	// join a worker by id
 	static join(id) { 
+		Logger.debug(`worker: ${workerId} try to join worker : ${id}`)
 		this.synchronizePostMessage({ 'command': 'join', 'workerId': id });
+		Logger.debug(`worker: ${workerId} joined worker : ${id}`)
 	}
 	// tell main thread that this worker is finish processing
 	static end() {
+		Logger.debug(`${workerName} try to end`)
 		postMessage({ 'command': 'end', 'workerId': workerId });
 		Logger.info(`${workerName} task finished...`);
 	}
@@ -436,7 +439,9 @@ let buildProxy = (target, prefix = "") => {
 			_target[propKey] = newValue;
 			mainObject.set(key, newValue)
 			//锁Object的时候不需要更新,否则序列化反序列化的时候会出错
-			if (!(newValue instanceof Object)) { changedObjects.set(key, newValue); }
+			// if (!(newValue instanceof Object)) { 
+			changedObjects.set(key, newValue); 
+			// }
 			//判断是否是volatile变量，若是，立马更新
 			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
 //				console.info("Volatile update now!")
@@ -539,4 +544,8 @@ Object.prototype.notify = function () {
 
 Object.prototype.notifyAll = function () {
 	Comm.notify(this)
+}
+
+Object.prototype.join = function () {
+	Comm.join(this.workerId)
 }
