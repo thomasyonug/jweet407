@@ -709,6 +709,11 @@ const java = {
             start() {
                 this.run()
             }
+						static sleep(timeOut) {
+							const start = Date.now();
+							const end = start + timeOut;
+							while (Date.now() < end) { }
+						}
             constructor(obj) {
                 if (obj) {
                     let worker = new WebWorker();
