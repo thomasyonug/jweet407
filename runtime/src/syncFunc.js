@@ -1,60 +1,53 @@
 /* Generated from Java with JSweet 4.0.0-SNAPSHOT - http://www.jsweet.org */
-class __Data {
+class __mData {
 }
-__Data.m = 3;
-__Data.n = 2;
-var Data = buildProxy(__Data);
-Data["__class"] = "Data";
+__mData.m = 1;
+var mData = buildProxy(__mData);
+mData["__class"] = "mData";
 class syncFunc extends WebWorker {
     constructor() {
         super(...arguments);
-        this.__captured_cvs = { 'Data.n': Data.n, 'Data.m': Data.m, };
+        this.__captured_cvs = { 'mData.m': mData.m, };
         this.source = function () {
-            class __Data {
+            class __mData {
                 constructor(__parent) {
                     this.__parent = __parent;
                 }
             }
-            __Data.m = 3;
-            __Data.n = 2;
-            var Data = buildProxy(__Data);
-            Data["__class"] = "Data";
+            __mData.m = 1;
+            var mData = buildProxy(__mData);
+            mData["__class"] = "mData";
             class syncFunc {
                 /**
                  *
                  */
                 run() {
-                    this.compare(Data.m, Data.n);
+                    this.addnum();
                 }
-                compare(a, b) {
+                addnum() {
                     Comm.sync(this);
-                    if (a > b) {
-                        console.info("a>b");
-                        Comm.unsync(this);
-                        return 0;
+                    let i = 0;
+                    console.info("begin");
+                    while ((i !== 1000)) {
+                        {
+                            mData.m = mData.m + 1;
+                            i = i + 1;
+                        }
                     }
-                    else if (a === b) {
-                        console.info("a=b");
-                        Comm.unsync(this);
-                        return 1;
-                    }
-                    else {
-                        console.info("a<b");
-                        Comm.unsync(this);
-                        return 2;
-                    }
+                    ;
+                    console.info(mData.m);
+                    console.info("end");
                     Comm.unsync(this);
                 }
                 static main(args) {
-                    const Com = new syncFunc();
-                    const t1 = new java.lang.Thread(Com);
-                    const t2 = new java.lang.Thread(Com);
+                    const Add = new syncFunc();
+                    const t1 = new java.lang.Thread(Add);
+                    const t2 = new java.lang.Thread(Add);
                     t1.start();
-                    Data.n = Data.n + 2;
                     t2.start();
                 }
                 constructor() {
-                    this.__captured_cvs = { 'Data.n': Data.n, 'Data.m': Data.m, };
+                    this.__captured_cvs = { 'mData.m': mData.m, };
                 }
             }
             syncFunc.class = { __key: "syncFunc" };
@@ -65,11 +58,10 @@ class syncFunc extends WebWorker {
         };
     }
     static main(args) {
-        const Com = new syncFunc();
-        const t1 = new java.lang.Thread(Com);
-        const t2 = new java.lang.Thread(Com);
+        const Add = new syncFunc();
+        const t1 = new java.lang.Thread(Add);
+        const t2 = new java.lang.Thread(Add);
         t1.start();
-        Data.n = Data.n + 2;
         t2.start();
     }
 }

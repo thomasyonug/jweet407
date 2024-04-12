@@ -628,6 +628,7 @@ function signalAll(data){
 	let condition = data.key;
 	if(conditionWaitingQueue.has(condition)){
 		let lockToData = conditionWaitingQueue.get(condition);
+		conditionWaitingQueue.delete(condition);
 		lockToData.forEach((dataList,lockName) => {
 			dataList.forEach(d => {
 				joinBlockQueue(lockName,d);
@@ -696,16 +697,19 @@ function buildProxy(obj) {
 }
 
 
-const java = {lang: {
-    Thread: class Thread {
-        start() {
-            this.run()
-        }
-        constructor(obj) {
-            if (obj) {
-                return obj;
+const java = {
+    lang: {
+        Thread: class Thread {
+            start() {
+                this.run()
+            }
+            constructor(obj) {
+                if (obj) {
+                    let worker = new WebWorker();
+                    worker.source = obj.source;
+                    return worker;
+                }
             }
         }
     }
-
-}}
+}

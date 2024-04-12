@@ -408,9 +408,7 @@ let buildProxy = (target, prefix = "") => {
 				const value = Comm.query(key);
 				return value==null?_target[propKey]:value;
 			}
-			if (mainObject.has(key)) {
-				return mainObject.get(key);
-			}
+
 			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
 				var tmp = Comm.query(key);
 				changedObjects.set(key, tmp);
@@ -420,6 +418,9 @@ let buildProxy = (target, prefix = "") => {
 					return tmp;
 				}
 			}
+			if (mainObject.has(key)) {
+                return mainObject.get(key);
+            }
 			return _target[propKey];
 		},
 		set: function (_target, propKey, newValue) {
@@ -437,7 +438,7 @@ let buildProxy = (target, prefix = "") => {
 			if (!(newValue instanceof Object)) { changedObjects.set(key, newValue); }
 			//判断是否是volatile变量，若是，立马更新
 			if (target.__captured_volatile_cvs != null && Object.keys(target.__captured_volatile_cvs).includes(propKey)) {
-				console.info("Volatile update now!")
+//				console.info("Volatile update now!")
 				Comm.update(key, newValue);
 			}
 			return true;
@@ -490,24 +491,27 @@ class Logger {
 	}
 }
 
-const java = {lang: {
-    Thread: class Thread {
-        start() {
-            this.run()
-        }
+const java = {
+    lang: {
+        Thread: class Thread {
+            start() {
+                this.run()
+            }
 			static sleep(timeOut) {
 				const start = Date.now();
 				const end = start + timeOut;
 				while (Date.now() < end) { }
 			}
-      constructor(obj) {
-			this.__key = Math.random();
-            if (obj) {
-                return obj;				
+            constructor(obj) {
+			    this.__key = Math.random();
+                if (obj) {
+                    return obj;
+                }
+            }
+            join() {
+                Comm.join(this.workerId)
             }
         }
-    }
-
 	},
 	// java.util.concurrent.locks
 	util: {
