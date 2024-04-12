@@ -401,7 +401,7 @@ let buildProxy = (target, prefix = "") => {
 			let key = className + '.' + propKey;
 			//console.log("get: " + key)
 			// 如果是对象，递归创建代理
-			if (_target[propKey] instanceof Object) {
+			if (_target[propKey] instanceof Object && propKey != 'prototype') {
 				return buildProxy(_target[propKey], key);
 			}
 			if (!USE_OPTIMIZE) {
