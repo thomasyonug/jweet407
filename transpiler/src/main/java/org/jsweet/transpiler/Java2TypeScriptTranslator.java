@@ -1492,7 +1492,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
             StringBuilder obj = new StringBuilder("{");
             for (var cv : cvs) {
                 // var cvname = cv.toString();
-                obj.append(String.format("'%s':%s,", cv, cv));
+                obj.append(String.format("'%s':'%s',", cv, cv));
             }
             obj.append("}");
             var captured = "public __captured_cvs : any = " + obj + ";\n";
@@ -1852,7 +1852,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 StringBuilder obj = new StringBuilder("{");
                 for (var cv : cvs) {
                     // var cvname = cv.toString();
-                    obj.append(String.format("'%s':%s,", cv, cv));
+                    obj.append(String.format("'%s':'%s',", cv, cv));
                 }
                 obj.append("}");
                 printIndent().print("public __captured_cvs : any = " + obj + ";\n");
