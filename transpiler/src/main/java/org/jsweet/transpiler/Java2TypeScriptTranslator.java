@@ -32,8 +32,7 @@ import static org.jsweet.JSweetConfig.TUPLE_CLASSES_PACKAGE;
 import static org.jsweet.JSweetConfig.UNION_CLASS_NAME;
 import static org.jsweet.JSweetConfig.UTIL_CLASSNAME;
 import static org.jsweet.JSweetConfig.UTIL_PACKAGE;
-import static org.jsweet.transpiler.util.Util.CONSTRUCTOR_METHOD_NAME;
-import static org.jsweet.transpiler.util.Util.firstOrDefault;
+import static org.jsweet.transpiler.util.Util.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -1800,7 +1799,7 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
 
                     if (!implementing.isEmpty()) {
                         if (!extendsInterface) {
-                            if (getScope().interfaceScope) {
+                            if (getScope().interfaceScope || is_parallel(classTree)) {
                                 print(" extends ");
                             } else {
                                 print(" implements ");
@@ -2145,6 +2144,9 @@ public class Java2TypeScriptTranslator extends AbstractTreePrinter {
                 }
 
                 print(") {").startIndent().println();
+                if (is_parallel(classTree)) {
+                    printIndent().print("super()");
+                }
                 if (classTree.getExtendsClause() != null && !getScope().removedSuperclass) {
                     TypeElement superTypeElement = Util.getTypeElement(classTree.getExtendsClause());
                     if (!context.isInterface(superTypeElement)) {
