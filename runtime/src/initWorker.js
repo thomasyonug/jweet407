@@ -348,10 +348,13 @@ class Comm {
 	}
 	// join a worker by id
 	static join(id) { 
+		Logger.debug(`worker: ${workerId} try to join worker : ${id}`)
 		this.synchronizePostMessage({ 'command': 'join', 'workerId': id });
+		Logger.debug(`worker: ${workerId} joined worker : ${id}`)
 	}
 	// tell main thread that this worker is finish processing
 	static end() {
+		Logger.debug(`${workerName} try to end`)
 		postMessage({ 'command': 'end', 'workerId': workerId });
 		Logger.info(`${workerName} task finished...`);
 	}
