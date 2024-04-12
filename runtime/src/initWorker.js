@@ -5,6 +5,7 @@
 // cvs更新后的值会在这里
 let workerId;
 let workerName;
+let __key;
 const BUF_SIZE = 16;
 const USE_OPTIMIZE = true;
 //Atomics.wait的时间单位为毫秒，定义其他时间单位到毫秒的倍数
@@ -348,10 +349,13 @@ class Comm {
 	}
 	// join a worker by id
 	static join(id) { 
+		Logger.debug(`worker: ${workerId} try to join worker : ${id}`)
 		this.synchronizePostMessage({ 'command': 'join', 'workerId': id });
+		Logger.debug(`worker: ${workerId} joined worker : ${id}`)
 	}
 	// tell main thread that this worker is finish processing
 	static end() {
+		Logger.debug(`${workerName} try to end`)
 		postMessage({ 'command': 'end', 'workerId': workerId });
 		Logger.info(`${workerName} task finished...`);
 	}
@@ -459,6 +463,7 @@ self.onmessage = (event) => {
 	switch (command) {
 		case 'init':
 			let id = data.id;
+			__key = data.key;
 			workerId = id;
 			workerName = `worker:${workerId}`;
 			Logger.info(`initialize a worker:${workerId}`);
@@ -505,8 +510,9 @@ const java = {
 				while (Date.now() < end) { }
 			}
             constructor(obj) {
-			    this.__key = Math.random();
+			    this.__key = __key;
                 if (obj) {
+                    obj.__key = Math.random();
                     return obj;
                 }
                 this.workerId = workerId

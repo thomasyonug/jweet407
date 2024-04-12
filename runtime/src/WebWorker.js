@@ -3,6 +3,7 @@ class WebWorker {
 	worker = null;
 	cvsSet = new Set();
 	workerId = null;
+	__key = null;
 	static workerCounter = 0;
 	static nextId() {
 		WebWorker.workerCounter += 1;
@@ -16,13 +17,16 @@ class WebWorker {
 		this.worker.onmessage = onmessage;
 		// assign the id to every worker
 		this.workerId = WebWorker.nextId();
-		this.worker.postMessage({ 'command': 'init', 'id': `${this.workerId}` });
+		this.worker.postMessage({ 'command': 'init', 'id': `${this.workerId}`, 'key': this.__key});
 	}
 	// 注册完成后，启动worker
 	start() {
 		this.init();
 		this.worker.postMessage({ 'command': 'start', 'source': `(${this.source.toString()})()` });
 		endWorkers.set(this.workerId.toString(), false);
+	}
+	constructor() {
+	    this.__key = Math.random();
 	}
 }
 
@@ -196,6 +200,7 @@ function onmessage(e) {
 				endLocks.set(workerId, []);
 			}
 			endLocks.get(workerId).push(lock);
+			break;
 		}
 		case 'end': {
 			// unlock the lock in endLocks by id
@@ -215,6 +220,7 @@ function onmessage(e) {
 				}
 			}
 			console.log('messageCount: ' + messageCount);
+			break;
 		}
 	}
 }
@@ -703,10 +709,16 @@ const java = {
             start() {
                 this.run()
             }
+						static sleep(timeOut) {
+							const start = Date.now();
+							const end = start + timeOut;
+							while (Date.now() < end) { }
+						}
             constructor(obj) {
                 if (obj) {
                     let worker = new WebWorker();
                     worker.source = obj.source;
+                    worker.__key = obj.__key;
                     return worker;
                 }
             }

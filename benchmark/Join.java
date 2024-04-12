@@ -17,6 +17,12 @@ class Loop extends Thread {
             }
             System.out.println("loop wake from sleep");
         }
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		System.out.println("loop end");
     }
 }
 

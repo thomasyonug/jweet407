@@ -33,7 +33,6 @@ class Car extends Thread {
                 }
             }
             ParkingLot.parkedCars++;
-            System.out.println(Thread.currentThread().getName() + " enters the parking lot. Total parked cars: " + ParkingLot.parkedCars);
             if (ParkingLot.parkedCars == ParkingLot.CAPACITY) {
                 ParkingLot.parkingAvailable = false; // 停车场已满，设置为不可用
             }
@@ -47,7 +46,6 @@ class Car extends Thread {
 
         synchronized (ParkingLot.lock) {
             ParkingLot.parkedCars--;
-            System.out.println(Thread.currentThread().getName() + " leaves the parking lot. Total parked cars: " + ParkingLot.parkedCars);
             if (ParkingLot.parkedCars == 0) {
                 ParkingLot.parkingAvailable = true; // 停车场为空，设置为可用
                 ParkingLot.lock.notifyAll(); // 唤醒其他等待进入停车场的车辆线程

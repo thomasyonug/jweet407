@@ -31,7 +31,7 @@ class Plate {
 class Dad extends Thread {
     @Override
     public void run() {
-        while (true) {
+        for(int i = 0; i < 10; i++) {
             synchronized (Plate.lock) {
                 while (Plate.available) {
                     try {
@@ -52,7 +52,7 @@ class Dad extends Thread {
 class Mom extends Thread {
     @Override
     public void run() {
-        while (true) {
+        for(int i = 0; i < 10; i++) {
             synchronized (Plate.lock) {
                 while (Plate.available) {
                     try {
@@ -73,7 +73,7 @@ class Mom extends Thread {
 class Son extends Thread {
     @Override
     public void run() {
-        while (true) {
+        for(int i = 0; i < 10; i++) {
             synchronized (Plate.lock) {
                 while (!Plate.available || !Plate.fruit.equals("Orange")) {
                     try {
@@ -92,7 +92,7 @@ class Son extends Thread {
 class Daughter extends Thread {
     @Override
     public void run() {
-        while (true) {
+        for(int i = 0; i < 10; i++) {
             synchronized ( Plate.lock) {
                 while (!Plate.available || !Plate.fruit.equals("Apple")) {
                     try {
