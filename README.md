@@ -8,11 +8,12 @@ JSweet407 是一个 Java2JS 的转译器实现，在 Jsweet 的基础上，增�
 ## 文档
 根目录下的technical-report.pdf文件中，详细说明了本项目的设计，架构，实现以及不足，并有相关数据展示。
 
+## 演示视频
+根目录下的example.mkv视频文件演示了如何通过我们编译的jar包运行本项目。
+
 ## 运行条件
 * JDK16+
 * TSC 
-
-
 
 ## 运行说明
 我们提供了一个bash脚本用于编译文件查看结果。run.sh脚本会调用artifacts目录下我们已经编译好的jar包对example文件夹里的文件进行编译，注意example文件夹里一次只能放一个文件否则可能会引起冲突。run.sh会将编译中间结果放到tsout文件目录下，并且将最终编译出来的js代码拷贝到runtime/src/compiled.js中，使用者可以使用http服务器访问runtime/src/test.html查看代码运行结果。具体过程可以查看我们制作的验收视频example.mkv。
@@ -20,8 +21,6 @@ JSweet407 是一个 Java2JS 的转译器实现，在 Jsweet 的基础上，增�
 
 ## 测试说明
 所有测试用例都在项目根目录下的benchmark文件夹内。
-
-
 
 ## 作者
 * 杨文章
