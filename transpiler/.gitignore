@@ -1,0 +1,12 @@
+/.idea/
+*.iml
+/target/
+.classpath
+.project
+.settings/
+/tempOut/
+/js/
+/.jsweet/
+/bin/
+jsweet-transpiler-2.*
+jsweet-transpiler-3.*
