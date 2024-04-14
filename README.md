@@ -1,4 +1,4 @@
-## 项目名称
+## JSweet407
 JSweet407 是一个 Java2JS 的转译器实现，在 Jsweet 的基础上，增加了对 Java 并发特性
 的支持。JSweet407 主要分为两个部分，转译器扩展与 JS 多线程运行时。其中所支持的特性包
 括 Thread 类, Runnable 接口, synchronized 关键字等。此外，还支持部分标准类库中的线程方法
