@@ -1,24 +1,24 @@
 class SumThread extends Thread {
-	@Override
-	public void run() {
-		int sum = 0;
-		for (int i = 0; i < 1000; i++) {
-			sum += ConcurrentArray.array[i];
-		}
+    @Override
+    public void run() {
+        int sum = 0;
+        for (int i = 0; i < 20; i++) {
+            sum += ConcurrentArray.array[i];
+        }
 
-		synchronized (ConcurrentArray.lock) {
-			ConcurrentArray.totalSum += sum;
-		}
-	}
+        synchronized (ConcurrentArray.lock) {
+            ConcurrentArray.totalSum += sum;
+        }
+    }
 }
 
 class ConcurrentArray {
-    public static int[] array = new int[1000];
-	static {
-        for (int i = 0; i < 1000; i++) {
+    public static int[] array = new int[20];
+    static {
+        for (int i = 0; i < 20; i++) {
             array[i] = 1;
         }
-	}
+    }
     public static final Object lock = new Object();
     public static int totalSum = 0;
 }
