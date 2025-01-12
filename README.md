@@ -1,32 +1,53 @@
 ## JSweet407
-JSweet407 是一个 Java2JS 的转译器实现，在 Jsweet 的基础上，增加了对 Java 并发特性
-的支持。JSweet407 主要分为两个部分，转译器扩展与 JS 多线程运行时。其中所支持的特性包
-括 Thread 类, Runnable 接口, synchronized 关键字等。此外，还支持部分标准类库中的线程方法
-如 join，sleep 等。基于当前的设计架构，还可以方便地实现 Java 标准库中的各种锁类，我们已
-在项目中实现了如 ReentrantLock, ReadWriteLock, StampedLock 等类作为示例。
+JSweet407 is a Java-to-JS transpiler implementation that builds upon Jsweet, adding support for Java concurrency features. 
 
-## 文档
-根目录下的technical-report.pdf文件中，详细说明了本项目的设计，架构，实现以及不足，并有相关数据展示。
+### Key Components
+JSweet407 consists of two main components:
+1. **Transpiler Extension**
+2. **JS Multithreading Runtime**
 
-## 演示视频
-根目录下的example.mkv视频文件演示了如何通过我们编译的jar包运行本项目。
+### Supported Features
+- `Thread` class  
+- `Runnable` interface  
+- `synchronized` keyword  
+- Thread methods from the standard library, such as:
+  - `join`
+  - `sleep`
 
-## 运行条件
-* JDK16+
-* TSC 
+### Lock Classes
+The current design architecture also allows for the easy implementation of various lock classes from the Java standard library. Examples implemented in the project include:
+- `ReentrantLock`
+- `ReadWriteLock`
+- `StampedLock`
 
-## 运行说明
-我们提供了一个bash脚本用于编译文件查看结果。run.sh脚本会调用artifacts目录下我们已经编译好的jar包对example文件夹里的文件进行编译，注意example文件夹里一次只能放一个文件否则可能会引起冲突。run.sh会将编译中间结果放到tsout文件目录下，并且将最终编译出来的js代码拷贝到runtime/src/compiled.js中，使用者可以使用http服务器访问runtime/src/test.html查看代码运行结果。具体过程可以查看我们制作的验收视频example.mkv。
 
+## Documentation
+The file `technical-report.pdf` in the root directory provides a detailed explanation of the project's design, architecture, implementation, and limitations, along with relevant data visualizations.
 
-## 测试说明
-所有测试用例都在项目根目录下的benchmark文件夹内。
+## Demo Video
 
-## 作者
-* 杨文章
-* 钟俊杰
-* 王连左
-* 张世平
-* 叶宇航
-* 陈奥
-* 高翠凤
+The `example.mkv` video file in the root directory demonstrates how to run this project using the compiled JAR package.
+
+## System Requirements
+- JDK 16+
+- TSC (TypeScript Compiler)
+
+## Usage Instructions
+
+We provide a bash script `run.sh` to compile files and view the results.  
+- The script uses the precompiled JAR package in the `artifacts` directory to compile files from the `example` folder.  
+- **Note:** Only one file should be placed in the `example` folder at a time to avoid potential conflicts.  
+- During execution, `run.sh` stores intermediate compilation results in the `tsout` directory and copies the final compiled JavaScript code to `runtime/src/compiled.js`.  
+
+Users can view the execution results by accessing `runtime/src/test.html` through an HTTP server. For detailed steps, refer to the demo video `example.mkv`.
+
+## Testing Instructions
+All test cases are located in the `benchmark` folder in the project root directory.
+
+## Authors
+- Wenzhang Yang
+- Junjie Zhong
+- Lianzuo Wang
+- Shiping Zhang
+- Yuhang Ye
+- Ao Chen
